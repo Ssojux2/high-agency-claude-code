@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.7.0**
+Current version: **0.7.1**
 
 ## Install
 
@@ -31,11 +31,12 @@ When delegation has real leverage, the plugin can use bundled role agents:
 | `high-agency-builder` | Sonnet / medium | isolated implementation |
 | `high-agency-verifier` | Haiku / low | targeted command/test reporting |
 | `high-agency-planner` | Opus / high | high-leverage architecture/root-cause reasoning |
-| `high-agency-deep-critic` | Opus / xhigh | rare security/high-impact/hard reasoning escalation |
+| `high-agency-advisor` | Fable / medium | ambitious codebase-wide strategy and long-horizon coordination |
+| `high-agency-deep-critic` | Fable / xhigh | rare security/high-impact/long-horizon hard reasoning escalation |
 
 The main conversation remains the integrator. Small tasks use **zero** subagents.
 
-The detailed policy is in `skills/high-agency-coding/references/model-routing.md` and is read only when delegation is justified.
+The detailed policy is in `skills/high-agency-coding/references/model-routing.md` and is read only when delegation is justified. Fable is reserved for ambitious long-horizon strategy or the hardest cognitive bottlenecks; routine execution stays on the main model/Sonnet/Haiku.
 
 ## What can and cannot self-adjust
 
@@ -79,9 +80,9 @@ main model → edit → targeted verification → finish
 Only higher-leverage tasks fan out:
 
 ```text
-Haiku scout ─┐
-             ├→ main / Sonnet builder
-Opus planner ┘
+Haiku scout ─────┐
+Opus planner ─────┼→ main / Sonnet builder
+Fable advisor ───┘
                     ↓
              Haiku verifier
                     ↓
