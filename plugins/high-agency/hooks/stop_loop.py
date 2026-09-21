@@ -34,19 +34,23 @@ def emit(payload: dict) -> None:
     sys.stdout.write(json.dumps(payload, separators=(",", ":")) + "\n")
 
 
-def data_root() -> Path:
-    return Path(tempfile.gettempdir()) / "high-agency-claude-code-data"
+def bounded_root() -> Path:
+    return Path(tempfile.gettempdir()) / "high-agency-claude-code"
+
+
+def verification_root() -> Path:
+    return Path(tempfile.gettempdir()) / "high-agency-claude-code-verification"
 
 
 def bounded_path(turn_id: str) -> Path:
     digest = hashlib.sha256(turn_id.encode("utf-8", "replace")).hexdigest()[:24]
-    return data_root() / "bounded-autonomy" / f"{digest}.json"
+    return bounded_root() / f"{digest}.json"
 
 
 def verification_path(payload: dict) -> Path:
-    raw = str(payload.get("turn_id") or payload.get("session_id") or "default")
+    raw = str(payload.get("session_id") or payload.get("turn_id") or "default")
     safe = re.sub(r"[^A-Za-z0-9_.-]", "_", raw)[:120]
-    return data_root() / "verification" / f"{safe}.json"
+    return verification_root() / f"{safe}.json"
 
 
 def load(path: Path) -> dict:
@@ -223,8 +227,8 @@ def main() -> int:
 
     turn_id = transcript
 
-    cleanup(data_root() / "bounded-autonomy")
-    cleanup(data_root() / "verification")
+    cleanup(bounded_root())
+    cleanup(verification_root())
 
     bpath = bounded_path(turn_id)
     vpath = verification_path(payload)
