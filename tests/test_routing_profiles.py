@@ -8,9 +8,10 @@ AGENT_DIR = ROOT / "plugins/high-agency/agents"
 EXPECTED = {
     "high-agency-scout.md": ("haiku", "low"),
     "high-agency-planner.md": ("opus", "high"),
+    "high-agency-advisor.md": ("fable", "medium"),
     "high-agency-builder.md": ("sonnet", "medium"),
     "high-agency-verifier.md": ("haiku", "low"),
-    "high-agency-deep-critic.md": ("opus", "xhigh"),
+    "high-agency-deep-critic.md": ("fable", "xhigh"),
 }
 
 
@@ -43,6 +44,13 @@ class ClaudeRoutingProfileTests(unittest.TestCase):
             else:
                 self.assertNotIn("Edit", tools)
                 self.assertNotIn("Write", tools)
+
+    def test_fable_roles_are_read_only(self):
+        for filename in ("high-agency-advisor.md", "high-agency-deep-critic.md"):
+            data = frontmatter(AGENT_DIR / filename)
+            self.assertEqual(data.get("model"), "fable")
+            self.assertNotIn("Edit", data.get("tools", ""))
+            self.assertNotIn("Write", data.get("tools", ""))
 
 
 if __name__ == "__main__":
