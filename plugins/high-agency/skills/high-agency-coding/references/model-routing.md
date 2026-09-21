@@ -97,3 +97,20 @@ Bad:
 - agents that all receive the whole task and duplicate reasoning.
 
 Ask each subagent for concise findings, file paths, commands, evidence, a strategy brief, or a bounded patch—not a full restatement of context.
+
+
+## Explicit fallback chains
+
+Do not block the task because a preferred delegated role/model is unavailable.
+
+- **scout / verifier:** Haiku low → Sonnet low/medium → current main model
+- **builder:** Sonnet medium → current main model
+- **normal complex planner / root cause:** Opus high → Fable medium → current main model
+- **long-horizon advisor:** Fable medium → Opus high → current main model
+- **deep critic:** Fable xhigh → Opus xhigh/high → current main model
+
+If `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is active, treat per-role model pins as overridden and use the effective forced model rather than pretending the routing policy executed.
+
+Do not use experimental agent teams as a fallback mechanism. Use ordinary bounded subagents or stay in the main thread.
+
+Do not silently claim a Fable/Opus role ran when the runtime provides no proof of the served model. The doctor skill can report configuration and override risks separately.
