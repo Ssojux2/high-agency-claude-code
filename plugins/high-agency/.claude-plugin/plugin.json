@@ -1,0 +1,17 @@
+{
+  "name": "high-agency",
+  "version": "0.2.0",
+  "description": "Lightweight high-agency coding and bounded autonomous iteration for Claude Code.",
+  "author": {
+    "name": "Blue Penguin"
+  },
+  "repository": "https://github.com/Ssojux2/high-agency-claude-code",
+  "license": "MIT",
+  "keywords": [
+    "coding",
+    "autonomy",
+    "verification",
+    "debugging",
+    "iteration"
+  ]
+}
