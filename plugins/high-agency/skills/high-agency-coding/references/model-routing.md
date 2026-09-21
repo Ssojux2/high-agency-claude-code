@@ -114,3 +114,26 @@ If `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is active, treat per-role model pins as ov
 Do not use experimental agent teams as a fallback mechanism. Use ordinary bounded subagents or stay in the main thread.
 
 Do not silently claim a Fable/Opus role ran when the runtime provides no proof of the served model. The doctor skill can report configuration and override risks separately.
+
+
+## Delegation budget
+
+Keep orchestration shallow.
+
+- Default to **at most 2 concurrent delegated agents**.
+- Use 3 only for 3 clearly independent workstreams with non-overlapping writes.
+- Do not use experimental agent teams to increase fanout.
+- Bundled High Agency agents intentionally do not receive the Agent tool, so they cannot recursively create an agent tree.
+- Do not spend both Opus and Fable on the same question unless one is explicitly critiquing materially new evidence from the other.
+
+## Handoff packet
+
+Give each role the smallest self-contained packet that preserves correctness:
+
+1. **Goal** — one bounded question or deliverable.
+2. **Evidence** — exact file excerpts, symbols, errors, or observations needed for that role.
+3. **Constraints** — scope, write boundary, safety/permission limits.
+4. **Expected return** — concise findings, strategy brief, bounded patch, or verification evidence.
+5. **Stop condition** — return instead of exploring beyond the delegated surface.
+
+Especially for Fable, gather evidence first with main/Haiku and pass a compact packet rather than duplicating a large repository context.
