@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENT_DIR = ROOT / "plugins/high-agency/agents"
+ROUTING = ROOT / "plugins/high-agency/skills/high-agency-coding/references/model-routing.md"
 
 EXPECTED = {
     "high-agency-scout.md": ("haiku", "low"),
@@ -50,6 +51,16 @@ class ClaudeRoutingProfileTests(unittest.TestCase):
             data = frontmatter(AGENT_DIR / filename)
             self.assertEqual(data.get("model"), "fable")
             self.assertEqual(data.get("tools"), "[]")
+
+    def test_delegation_is_shallow_and_bounded(self):
+        text = ROUTING.read_text(encoding="utf-8")
+        self.assertIn("at most 2 concurrent delegated agents", text)
+        self.assertIn("intentionally do not receive the Agent tool", text)
+
+    def test_handoff_packet_is_compact(self):
+        text = ROUTING.read_text(encoding="utf-8")
+        for field in ("Goal", "Evidence", "Constraints", "Expected return", "Stop condition"):
+            self.assertIn(field, text)
 
 
 if __name__ == "__main__":
