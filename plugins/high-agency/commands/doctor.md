@@ -1,7 +1,7 @@
 ---
 description: Diagnose High Agency routing, hooks, model/effort overrides, and environment without modifying project files
 argument-hint: [--probe-models]
-allowed-tools: Bash, Read, Grep, Glob, Agent
+allowed-tools: Bash, Read, Grep, Glob, Task
 model: haiku
 effort: low
 ---
