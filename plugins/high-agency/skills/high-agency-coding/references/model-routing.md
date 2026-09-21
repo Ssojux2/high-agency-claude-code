@@ -32,6 +32,8 @@ Prefer the smallest sufficient role.
 
 Fable is not the default planner. Use it when the problem spans a large codebase, long horizon, many interacting systems, or when cheaper/standard strong reasoning has already failed.
 
+Fable roles are deliberately **tool-free one-shot advisors**. The main thread or Haiku scout gathers the minimum relevant evidence first and passes a compact problem packet to Fable. This keeps frontier reasoning focused on the cognitive bottleneck instead of spending it on repository exploration, reduces duplicate context/tool traffic, and avoids depending on multi-turn child-agent tool behavior.
+
 The advisor pattern is preferred over handing the entire task to Fable: Fable sets the strategy or resolves the hard cognitive bottleneck; the main thread/Sonnet/Haiku perform routine execution and verification.
 
 ## Stage guidance
@@ -42,8 +44,8 @@ The advisor pattern is preferred over handing the entire task to Fable: Fable se
 - Normal multi-step: current main model with a short plan.
 - Large unfamiliar repo: scout first, then main thread.
 - Everyday complex architecture: planner (Opus/high).
-- Ambitious codebase-wide or long-horizon architecture: advisor (Fable/medium).
-- Capability-critical strategy where medium is insufficient: deep-critic (Fable/xhigh), rarely.
+- Ambitious codebase-wide or long-horizon architecture: gather evidence with main/scout, then advisor (Fable/medium) on a bounded packet.
+- Capability-critical strategy where medium is insufficient: deep-critic (Fable/xhigh) on a bounded packet, rarely.
 
 Do not send routine planning to Opus or Fable.
 
@@ -60,7 +62,7 @@ Do not send routine planning to Opus or Fable.
 - Running targeted tests and reporting exact output: verifier.
 - Failure requires interpretation: main thread.
 - Complex failure after two evidence-based attempts: planner (Opus/high).
-- Persistent long-horizon or cross-system failure after that: advisor (Fable/medium) or deep-critic (Fable/xhigh).
+- Persistent long-horizon or cross-system failure after that: main/scout packages the evidence, then advisor (Fable/medium) or deep-critic (Fable/xhigh).
 
 ### Review
 
