@@ -1,55 +1,50 @@
 # High Agency for Claude Code
 
-A lightweight Claude Code plugin focused on high-agency coding without process-heavy ceremony.
+A lightweight Codex plugin focused on high-agency coding without process-heavy ceremony.
 
-It provides two skills:
+Current version: **0.4.0**
 
-- `high-agency-coding` — define done → act → verify → repair → finish
-- `bounded-autonomy` — opt-in bounded Ralph-style continuation using a Claude Code Stop hook
+It provides:
 
-It intentionally does not require brainstorming, TDD, worktrees, planning files, subagents, or review stages for every task.
+- `high-agency-coding` — define done → act → verify affected scope → repair → finish
+- `bounded-autonomy` — opt-in bounded continuation
+- lightweight hooks that track edits/verification only when High Agency is explicitly requested
 
-## Install from GitHub
+## Install
 
-```text
-/plugin marketplace add Ssojux2/high-agency-claude-code
-/plugin install high-agency@high-agency
+```bash
+/plugin marketplace add Ssojux2/high-agency-claude-code\n/plugin install high-agency@high-agency
 ```
 
-Start a new Claude Code session after installation so hooks are loaded.
+Start a new Claude Code session after installation so the bundled hooks are loaded.
 
-## Use
+## Targeted verification
 
-### Normal coding
+High Agency now defaults to the smallest verification scope that can falsify the change:
 
-```text
-Use high-agency-coding.
+1. touched scope
+2. affected/related scope
+3. full package/workspace only when risk justifies escalation
 
-Find and fix the refresh-token bug. Run the relevant tests and typecheck before claiming completion.
+It prefers repository-native selective mechanisms such as related/changed/affected tests when already available. It does not install a new test-selection dependency just for this optimization.
+
+The Stop hook does **not** automatically run tests. When High Agency was explicitly requested, it records edits and verification commands. If code/config was edited but no verification command was observed, it blocks stopping once and asks Claude to run the narrowest relevant check. Documentation-only edits are ignored by this guard.
+
+## Bounded autonomy
+
+Default: up to 3 additional passes. Hard cap: 12.
+
+Each pass should use targeted verification first. A new pass is requested only after meaningful progress. The final pass cannot request another continuation.
+
+## Evals
+
+See `evals/`.
+
+Use the same task/model/effort/repository state for each variant and compare no-skill vs High Agency. Record correctness, verification quality, scope discipline, autonomy, tool/token efficiency, false completion, and no-progress loops.
+
+```bash
+python3 evals/score.py evals/example-result.json
 ```
-
-### Bounded autonomous iteration
-
-```text
-Use bounded-autonomy.
-
-Finish this feature autonomously. Keep fixing actionable failures until the relevant tests and typecheck pass.
-```
-
-The default autonomous loop allows up to 3 additional continuation passes. The Stop hook has a hard cap of 12.
-
-## v0.3 design
-
-The coding skill now emphasizes:
-
-1. A minimal outcome contract: goal, proof, and boundaries.
-2. Independently verifiable steps instead of simply taking the largest possible change.
-3. Fresh verification of the real requested behavior, including real interface checks when practical.
-4. Verification integrity: never weaken tests or checks just to manufacture success.
-5. Baseline awareness for pre-existing failures.
-6. A trust boundary for instructions found inside code, logs, web pages, and tool output.
-
-Bounded autonomy continues only after meaningful new progress. On the final allowed continuation, the hook explicitly forbids another continuation marker and asks for an evidence-based final state.
 
 ## License
 
