@@ -1,114 +1,98 @@
 # High Agency for Claude Code
 
-A lightweight coding scaffold that keeps the useful parts of strict workflows—clear completion criteria, evidence, iteration, and review—without making planning, TDD, subagents, full-suite tests, or review stages mandatory.
+High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.6.0**
+Current version: **0.7.0**
 
 ## Install
 
-```bash
-/plugin marketplace add Ssojux2/high-agency-claude-code\n/plugin install high-agency@high-agency
-```
-
-Start a new Claude Code session after installation so hooks are loaded.
-
-## Skills
-
-- `high-agency-coding` — define done → implement → verify touched/affected scope → conditionally review diff → finish.
-- `bounded-autonomy` — progress-gated iteration with a small dynamic pass budget.
-
-## Lightweight verification
-
-Verification expands only when risk expands:
+In Claude Code:
 
 ```text
-local change → targeted check
-             → affected/related check only if propagation risk exists
-             → full check only for broad/release-critical risk
+/plugin marketplace add Ssojux2/high-agency-claude-code
+/plugin install high-agency@high-agency
 ```
 
-Still-valid verification is reused until a relevant later edit invalidates it. Independent read-only checks may run in parallel when both are already necessary.
+Start a new session after installation so bundled agents and hooks are loaded.
 
-## Git baseline tracking
+## Core behavior
 
-v0.6 closes the main v0.5 tracking gap: edits made through shell commands, generators, formatters, or scripts can now invalidate verification even when they bypass native Edit/Write tools.
+`high-agency-coding` defaults to **single-agent execution with the current model**.
 
-When High Agency is explicitly invoked:
+It does not require planning documents, TDD, worktrees, subagents, full suites, or review stages for every task.
 
-1. `UserPromptSubmit` records a lightweight Git baseline against the current HEAD.
-2. A recognized verification command stores a verification snapshot.
-3. At `Stop`, High Agency compares the current working tree to those snapshots.
-4. If relevant files changed after verification, it asks for the narrowest targeted/affected check again.
+## Adaptive Claude routing
 
-The snapshot stores fingerprints only for files already changed relative to the turn's baseline HEAD, capped at 512 paths. It does not copy the repository or run a diff after every shell command.
+When delegation has real leverage, the plugin can use bundled role agents:
 
-For non-Git/unborn repositories the hook falls back to native Edit/Write tracking.
+| Role | Model / effort | Purpose |
+|---|---|---|
+| `high-agency-scout` | Haiku / low | broad read-only mapping |
+| `high-agency-builder` | Sonnet / medium | isolated implementation |
+| `high-agency-verifier` | Haiku / low | targeted command/test reporting |
+| `high-agency-planner` | Opus / high | high-leverage architecture/root-cause reasoning |
+| `high-agency-deep-critic` | Opus / xhigh | rare security/high-impact/hard reasoning escalation |
 
-## Conditional final diff review
+The main conversation remains the integrator. Small tasks use **zero** subagents.
 
-A final diff review is **not** required for every small fix. The Stop hook asks for a focused final diff only when one or more risk signals are present:
+The detailed policy is in `skills/high-agency-coding/references/model-routing.md` and is read only when delegation is justified.
 
-- 3+ code/config files changed;
-- changes cross module/package boundaries;
-- schema/migration, dependency/lockfile, build/deploy config, auth/security/permissions changed;
-- final diff is large (currently 120+ changed lines when Git can measure it).
+## What can and cannot self-adjust
 
-The hook compares the final Git state to the turn-start baseline, so shell/generator changes participate in the same risk gate.
+High Agency can select among bundled subagent model/effort profiles when Claude Code supports them.
+
+It does **not** silently replace the primary conversation model. Session-level model/effort remains controlled by Claude Code/user settings. The skill adapts by deciding whether to keep work in the main thread or route a bounded subtask to a role with a different model/effort.
+
+If a requested model is unavailable or restricted, Claude Code's supported fallback/substitution applies.
+
+## Verification and hooks
+
+Verification follows:
+
+```text
+touched → affected → broad only on risk
+```
+
+Git-baseline hooks detect native edits plus shell/generator changes, invalidate stale verification, and trigger focused final diff review only on meaningful risk signals.
+
+Hooks do not automatically run project tests or launch agents.
 
 ## Bounded autonomy
 
-Use the smallest useful budget:
+`bounded-autonomy` uses the smallest useful pass budget:
 
-- local/narrow fix: `max=1`;
-- normal multi-step work: `max=3`;
-- more than 3 only when clearly justified or explicitly requested;
+- local/narrow: `max=1`;
+- normal multi-step: `max=3`;
+- more only when justified/requested;
 - hard cap: 12.
 
-The loop continues only after meaningful progress. The final allowed pass cannot request another pass.
+If two good attempts fail for the same cognitive reason, High Agency escalates model/effort before adding blind iterations.
 
-## Why lighter than Superpowers and Ralph
+## Why this stays lightweight
 
-| Concern | Superpowers / Ralph | High Agency |
-|---|---|---|
-| Planning | Superpowers uses formal design/plan stages | minimal outcome contract; plan only on uncertainty |
-| TDD | mandatory in Superpowers | optional; tests chosen by information value |
-| Worktree/subagents | often structured into workflow | only when isolation/parallelism materially helps |
-| Review | task/branch reviews can be mandatory | focused final diff only on risk signals |
-| Test scope | strong verification, often workflow-wide | touched → affected → full only on escalation |
-| Iteration | Ralph repeats until promise/max | progress-gated, usually 1 or 3 extra passes |
-| Repeated checks | workflow stages may repeat checks | reuse evidence until relevant inputs change |
+Normal path:
 
-## Benchmark
-
-A reproducible structural benchmark is in [`benchmarks/2026-09-22-structural.md`](benchmarks/2026-09-22-structural.md).
-
-The v0.6 change is hook-only, so the model-facing workflow instruction footprint is unchanged from v0.5:
-
-| Workflow | Model-facing workflow words |
-|---|---:|
-| High Agency normal | **1,163** |
-| High Agency bounded | **1,634** |
-| Superpowers bug-fix path | 3,987 |
-| Superpowers feature path | 5,160 |
-| Ralph command scaffold | 129 |
-
-These are process-footprint measurements, not task-success claims. End-to-end quality results should only be published after equal-model/equal-budget agent runs.
-
-## Hooks
-
-Hooks are active only when the user explicitly invokes High Agency. They do **not** automatically execute project tests or launch review agents.
-
-## Tests and evals
-
-`tests/test_git_state.py` covers shell edits, pre-existing dirty files, untracked generator output, and verification snapshot invalidation.
-
-`evals/` contains the task-quality rubric and four-way comparison tooling.
-
-```bash
-python3 -m unittest tests/test_git_state.py
-python3 evals/score.py results.json > scored.json
-python3 evals/compare.py scored.json
+```text
+main model → edit → targeted verification → finish
 ```
+
+Only higher-leverage tasks fan out:
+
+```text
+Haiku scout ─┐
+             ├→ main / Sonnet builder
+Opus planner ┘
+                    ↓
+             Haiku verifier
+                    ↓
+         risk-triggered review only
+```
+
+## Benchmarks and evals
+
+`benchmarks/` contains structural process-footprint measurements. `evals/` contains task-quality and four-way comparison tooling.
+
+End-to-end success claims are intentionally not published without equal-model/equal-budget runs.
 
 ## License
 
