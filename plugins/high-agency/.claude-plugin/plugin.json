@@ -1,9 +1,9 @@
 {
   "name":"high-agency",
-  "version":"0.6.0",
-  "description":"Lightweight high-agency coding with Git-baseline verification, conditional diff review, and bounded autonomous iteration for Claude Code.",
+  "version":"0.7.0",
+  "description":"Lightweight high-agency coding with adaptive model/effort routing, targeted verification, and bounded autonomous iteration for Claude Code.",
   "author":{"name":"Blue Penguin"},
   "repository":"https://github.com/Ssojux2/high-agency-claude-code",
   "license":"MIT",
-  "keywords":["coding","autonomy","verification","git-baseline","targeted-testing","conditional-review","debugging","iteration"]
+  "keywords":["coding","autonomy","adaptive-routing","subagents","effort","verification","git-baseline","targeted-testing","debugging"]
 }
