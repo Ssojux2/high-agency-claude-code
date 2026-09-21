@@ -45,12 +45,11 @@ class ClaudeRoutingProfileTests(unittest.TestCase):
                 self.assertNotIn("Edit", tools)
                 self.assertNotIn("Write", tools)
 
-    def test_fable_roles_are_read_only(self):
+    def test_fable_roles_are_tool_free(self):
         for filename in ("high-agency-advisor.md", "high-agency-deep-critic.md"):
             data = frontmatter(AGENT_DIR / filename)
             self.assertEqual(data.get("model"), "fable")
-            self.assertNotIn("Edit", data.get("tools", ""))
-            self.assertNotIn("Write", data.get("tools", ""))
+            self.assertEqual(data.get("tools"), "[]")
 
 
 if __name__ == "__main__":
