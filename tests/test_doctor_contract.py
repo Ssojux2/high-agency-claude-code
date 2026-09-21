@@ -25,7 +25,10 @@ class ClaudeDoctorContractTests(unittest.TestCase):
         text = COMMAND.read_text(encoding="utf-8")
         self.assertRegex(text, r"model:\s*haiku")
         self.assertRegex(text, r"effort:\s*low")
-        self.assertIn("CLAUDE_CODE_SUBAGENT_MODEL_FORCE", text)\n        self.assertIn("--probe-models", text)\n        self.assertIn("Agent", text)\n        self.assertIn("Do not modify project files or settings", text)
+        self.assertIn("CLAUDE_CODE_SUBAGENT_MODEL_FORCE", text)
+        self.assertIn("--probe-models", text)
+        self.assertIn("Agent", text)
+        self.assertIn("Do not modify project files or settings", text)
 
     def test_explicit_fallbacks_exist(self):
         text = ROUTING.read_text(encoding="utf-8")
