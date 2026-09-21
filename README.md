@@ -34,7 +34,7 @@ When delegation has real leverage, the plugin can use bundled role agents:
 | `high-agency-advisor` | Fable / medium | ambitious codebase-wide strategy and long-horizon coordination |
 | `high-agency-deep-critic` | Fable / xhigh | rare security/high-impact/long-horizon hard reasoning escalation |
 
-The main conversation remains the integrator. Small tasks use **zero** subagents.
+The main conversation remains the integrator. Small tasks use **zero** subagents. Fable roles are deliberately tool-free: the main thread/Haiku gathers a compact evidence packet, then Fable reasons over that packet as a one-shot advisor or critic.
 
 The detailed policy is in `skills/high-agency-coding/references/model-routing.md` and is read only when delegation is justified. Fable is reserved for ambitious long-horizon strategy or the hardest cognitive bottlenecks; routine execution stays on the main model/Sonnet/Haiku.
 
