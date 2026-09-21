@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "high-agency",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "High Agency plugins for Claude Code",
   "owner": {
     "name": "Blue Penguin"
@@ -10,7 +10,7 @@
     {
       "name": "high-agency",
       "description": "Lightweight high-agency coding and bounded autonomous iteration for Claude Code.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "source": "./plugins/high-agency",
       "category": "development"
     }
