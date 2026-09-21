@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.7.1**
+Current version: **0.8.0**
 
 ## Install
 
@@ -44,7 +44,33 @@ High Agency can select among bundled subagent model/effort profiles when Claude 
 
 It does **not** silently replace the primary conversation model. Session-level model/effort remains controlled by Claude Code/user settings. The skill adapts by deciding whether to keep work in the main thread or route a bounded subtask to a role with a different model/effort.
 
-If a requested model is unavailable or restricted, Claude Code's supported fallback/substitution applies.
+If a requested model is unavailable or restricted, High Agency uses explicit fallbacks: Haiku→Sonnet→main for scout/verifier, Sonnet→main for builder, Opus→Fable→main for normal complex planning, Fable→Opus→main for long-horizon advice, and Fable→Opus→main for deep critique.
+
+## Doctor
+
+Run:
+
+```text
+/high-agency:doctor
+```
+
+or invoke the `high-agency-doctor` skill directly.
+
+The doctor is read-only and defaults to static diagnostics. It checks Claude/Python/Git versions, safe routing-related settings, and these environment overrides without printing unrelated settings or secrets:
+
+- `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`
+- `CLAUDE_CODE_SUBAGENT_MODEL`
+- `CLAUDE_CODE_EFFORT_LEVEL`
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
+
+Key warnings:
+
+- `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` can override every per-role model pin.
+- experimental agent teams are not required by High Agency; ordinary bounded subagents are the supported routing path.
+- Fable/Opus/Sonnet/Haiku availability is **UNVERIFIED** unless the user explicitly requests model probes.
+- use `/model`, `/effort`, and `/status` for the live session view.
+
+Optional model probes are one-turn and opt-in; doctor never fan-outs across all models by default.
 
 ## Verification and hooks
 
