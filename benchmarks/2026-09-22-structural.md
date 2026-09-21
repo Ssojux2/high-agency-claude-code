@@ -2,7 +2,7 @@
 
 This benchmark measures model-facing workflow instruction footprint, not end-to-end coding quality.
 
-## v0.7 progressive disclosure
+## v0.7.1 progressive disclosure
 
 High Agency v0.7 moved routing detail out of the core skill and added small role agents that are loaded only when spawned.
 
@@ -10,9 +10,9 @@ High Agency v0.7 moved routing detail out of the core skill and added small role
 |---|---:|
 | High Agency core | **647** |
 | High Agency core + bounded autonomy | **876** |
-| High Agency core + routing reference | **1,132** |
-| High Agency bounded + routing reference | **1,361** |
-| Optional role-agent prompt | **78–88 each, only when spawned** |
+| High Agency core + routing reference | **1,336** |
+| High Agency bounded + routing reference | **1,565** |
+| Optional role-agent prompt | **78–110 each, only when spawned** |
 | Superpowers measured bug-fix path | 3,987 |
 | Superpowers measured feature path | 5,160 |
 | Ralph command scaffold | 129 |
@@ -46,9 +46,9 @@ main model → edit → targeted check → finish
 Higher-leverage task:
 
 ```text
-Haiku scout / Opus planner (only if justified)
-            ↓
-     main integration / Sonnet builder
+Haiku scout / Opus planner / Fable advisor (only if justified)
+                    ↓
+          main integration / Sonnet builder
             ↓
        Haiku verifier
             ↓
@@ -58,3 +58,8 @@ Haiku scout / Opus planner (only if justified)
 ## End-to-end status
 
 No task-success or cost advantage is claimed until equal-model/equal-budget task runs are performed. Use `evals/` for reproducible comparisons.
+
+
+### Fable note
+
+Fable routing was added in v0.7.1. It is optional and does not increase the ordinary core path. The routing reference grows only when delegation is triggered, while Fable role prompts are loaded only when spawned.
