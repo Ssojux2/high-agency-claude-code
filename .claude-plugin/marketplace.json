@@ -1,14 +1,18 @@
 {
-  "$schema":"https://json.schemastore.org/claude-code-marketplace.json",
-  "name":"high-agency",
-  "version":"0.7.0",
-  "description":"High Agency plugins for Claude Code",
-  "owner":{"name":"Blue Penguin"},
-  "plugins":[{
-    "name":"high-agency",
-    "description":"Lightweight high-agency coding with adaptive model/effort routing, targeted verification, and bounded autonomous iteration for Claude Code.",
-    "version":"0.7.0",
-    "source":"./plugins/high-agency",
-    "category":"development"
-  }]
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "high-agency",
+  "version": "0.7.1",
+  "description": "High Agency plugins for Claude Code",
+  "owner": {
+    "name": "Blue Penguin"
+  },
+  "plugins": [
+    {
+      "name": "high-agency",
+      "description": "Lightweight high-agency coding with adaptive Haiku/Sonnet/Opus/Fable routing, targeted verification, and bounded autonomous iteration for Claude Code.",
+      "version": "0.7.1",
+      "source": "./plugins/high-agency",
+      "category": "development"
+    }
+  ]
 }
