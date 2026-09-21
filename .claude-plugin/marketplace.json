@@ -1,16 +1,14 @@
 {
   "$schema":"https://json.schemastore.org/claude-code-marketplace.json",
   "name":"high-agency",
-  "version":"0.5.0",
+  "version":"0.6.0",
   "description":"High Agency plugins for Claude Code",
   "owner":{"name":"Blue Penguin"},
-  "plugins":[
-    {
-      "name":"high-agency",
-      "description":"Lightweight high-agency coding with targeted verification, conditional diff review, and bounded autonomous iteration for Claude Code.",
-      "version":"0.5.0",
-      "source":"./plugins/high-agency",
-      "category":"development"
-    }
-  ]
+  "plugins":[{
+    "name":"high-agency",
+    "description":"Lightweight high-agency coding with Git-baseline verification, conditional diff review, and bounded autonomous iteration for Claude Code.",
+    "version":"0.6.0",
+    "source":"./plugins/high-agency",
+    "category":"development"
+  }]
 }
