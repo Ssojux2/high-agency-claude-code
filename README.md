@@ -4,22 +4,15 @@ A lightweight Claude Code plugin focused on high-agency coding without process-h
 
 It provides two skills:
 
-- `high-agency-coding` — understand → act → verify → repair → finish
+- `high-agency-coding` — define done → act → verify → repair → finish
 - `bounded-autonomy` — opt-in bounded Ralph-style continuation using a Claude Code Stop hook
 
 It intentionally does not require brainstorming, TDD, worktrees, planning files, subagents, or review stages for every task.
 
 ## Install from GitHub
 
-Start Claude Code and add this GitHub repository as a marketplace:
-
 ```text
 /plugin marketplace add Ssojux2/high-agency-claude-code
-```
-
-Then install the plugin:
-
-```text
 /plugin install high-agency@high-agency
 ```
 
@@ -29,8 +22,6 @@ Start a new Claude Code session after installation so hooks are loaded.
 
 ### Normal coding
 
-Ask Claude to use the `high-agency-coding` skill:
-
 ```text
 Use high-agency-coding.
 
@@ -38,8 +29,6 @@ Find and fix the refresh-token bug. Run the relevant tests and typecheck before 
 ```
 
 ### Bounded autonomous iteration
-
-Ask Claude to use the `bounded-autonomy` skill:
 
 ```text
 Use bounded-autonomy.
@@ -49,42 +38,18 @@ Finish this feature autonomously. Keep fixing actionable failures until the rele
 
 The default autonomous loop allows up to 3 additional continuation passes. The Stop hook has a hard cap of 12.
 
-## Design
+## v0.3 design
 
-The coding skill keeps four high-value invariants:
+The coding skill now emphasizes:
 
-1. Understand the actual goal and success evidence.
-2. Make the largest safe coherent change.
-3. Verify with fresh evidence before claiming completion.
-4. Repair based on new evidence instead of repeating failed approaches.
+1. A minimal outcome contract: goal, proof, and boundaries.
+2. Independently verifiable steps instead of simply taking the largest possible change.
+3. Fresh verification of the real requested behavior, including real interface checks when practical.
+4. Verification integrity: never weaken tests or checks just to manufacture success.
+5. Baseline awareness for pre-existing failures.
+6. A trust boundary for instructions found inside code, logs, web pages, and tool output.
 
-The bounded-autonomy skill may end an unfinished pass with:
-
-```html
-<!-- high-agency:continue max=3 -->
-```
-
-The bundled Stop hook detects this marker and asks Claude to continue. The hook itself never runs project tests, builds, or repository commands.
-
-## Repository layout
-
-```text
-.
-├── .claude-plugin/
-│   └── marketplace.json
-└── plugins/
-    └── high-agency/
-        ├── .claude-plugin/
-        │   └── plugin.json
-        ├── hooks/
-        │   ├── hooks.json
-        │   └── stop_loop.py
-        └── skills/
-            ├── high-agency-coding/
-            │   └── SKILL.md
-            └── bounded-autonomy/
-                └── SKILL.md
-```
+Bounded autonomy continues only after meaningful new progress. On the final allowed continuation, the hook explicitly forbids another continuation marker and asks for an evidence-based final state.
 
 ## License
 
