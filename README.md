@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.8.0**
+Current version: **0.8.1**
 
 ## Install
 
@@ -14,6 +14,8 @@ In Claude Code:
 ```
 
 Start a new session after installation so bundled agents and hooks are loaded.
+
+> **v0.8.1 manifest compatibility:** `agents/` and `commands/` use Claude Code's standard automatic discovery. They are intentionally not declared in `.claude-plugin/plugin.json`, because current Claude Code builds can reject those manifest fields even though older plugin-development references document them.
 
 ## Core behavior
 
