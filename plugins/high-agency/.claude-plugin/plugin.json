@@ -1,6 +1,6 @@
 {
   "name": "high-agency",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Lightweight high-agency coding with adaptive Haiku/Sonnet/Opus/Fable routing, diagnostics, explicit fallbacks, targeted verification, and bounded autonomous iteration for Claude Code.",
   "author": {
     "name": "Blue Penguin"
@@ -17,7 +17,5 @@
     "git-baseline",
     "targeted-testing",
     "debugging"
-  ],
-  "agents": "./agents",
-  "commands": "./commands"
+  ]
 }
