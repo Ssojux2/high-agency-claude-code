@@ -36,9 +36,10 @@ class ClaudeDoctorContractTests(unittest.TestCase):
         for model in ("Haiku", "Sonnet", "Opus", "Fable", "current main model"):
             self.assertIn(model, text)
 
-    def test_manifest_declares_commands(self):
+    def test_manifest_uses_standard_component_discovery(self):
         text = MANIFEST.read_text(encoding="utf-8")
-        self.assertIn('"commands": "./commands"', text)
+        self.assertNotIn('"commands"', text)
+        self.assertNotIn('"agents"', text)
 
 
 if __name__ == "__main__":
