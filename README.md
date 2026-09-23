@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.8.2**
+Current version: **0.8.3**
 
 ## Install
 
@@ -16,6 +16,8 @@ In Claude Code:
 Start a new session after installation so bundled agents and hooks are loaded.
 
 > **v0.8.2 manifest compatibility:** `agents/` and `commands/` use Claude Code's standard automatic discovery. They are intentionally not declared in `.claude-plugin/plugin.json`, because current Claude Code builds can reject those manifest fields even though older plugin-development references document them.
+
+> **v0.8.3 hook reliability:** fixes repeated `PostToolUse:Bash hook error` messages caused by a missing Python `tempfile` import in the verification-state hook. The tracking hook now also fails open by default so an unexpected diagnostic/state error does not interrupt Claude Code. Set `HIGH_AGENCY_HOOK_DEBUG=1` only when debugging a hook failure.
 
 ## Core behavior
 
