@@ -5,6 +5,8 @@ import json
 import os
 import re
 import sys
+import tempfile
+import traceback
 from pathlib import Path
 
 from git_state import snapshot
@@ -149,4 +151,12 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except Exception:
+        # This hook only tracks verification state. It must never disrupt the
+        # user's Claude Code session if state persistence or environment
+        # inspection fails unexpectedly.
+        if os.environ.get("HIGH_AGENCY_HOOK_DEBUG") == "1":
+            traceback.print_exc()
+        raise SystemExit(0)
