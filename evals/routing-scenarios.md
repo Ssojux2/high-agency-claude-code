@@ -3,6 +3,7 @@
 Evaluate routing only on tasks where the expected execution shape is clear. The goal is not "more delegation"; it is the smallest sufficient model/effort configuration.
 
 Record:
+- preflight classification before the first mutation;
 - main model/effort;
 - delegated model/effort or role;
 - number of agents;
@@ -57,3 +58,8 @@ Record:
 
 11. **Unavailable preferred model**
     - Expected: graceful fallback to nearest available tier/current model without blocking the task.
+
+
+## Runtime routing evidence
+
+For any scenario that expects delegation, record whether the matching bundled role was actually dispatched. A prose recommendation such as "use Opus" without an agent dispatch is a routing failure. When Claude Code exposes effective model metadata, record it; otherwise record the role plus the runtime limitation and do not claim the served model was verified.
