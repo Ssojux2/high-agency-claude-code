@@ -34,39 +34,49 @@ For a local reversible change:
 
 For uncertain or multi-step work, keep a short working plan in context. Ask the user only when materially different interpretations affect outcomes, side effects, or irreversible choices.
 
-## Routing preflight
+## Unified preflight
 
-Before the first code/config mutation, classify the task once. This is a lightweight routing decision, not a planning ceremony.
-
-- **DIRECT** — local, obvious, bounded work: stay on the current main model.
-- **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting: use scout/verifier.
-- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work: use builder.
-- **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation: use planner before implementation.
-- **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that remains unresolved after a strong attempt: use advisor/deep-critic on a bounded evidence packet.
-
-If the classification is anything other than **DIRECT**, read `references/model-routing.md` before deciding the delegated role. Do not first attempt the whole problem on the current model merely to earn permission to route it.
-
-The main thread remains the integrator; this preflight selects where cognition should happen, not which model owns the whole session.
-
-## Impact calibration
-
-After enough inspection to understand the likely change, but **before the first code/config mutation**, write exactly one compact estimate:
+After enough read-only inspection to understand the likely task shape, but **before the first code/config mutation**, write exactly one compact five-line preflight block:
 
 ```text
+Preflight: <one short task-shape summary>
+Complexity: low | medium | high | frontier
+Route: DIRECT | CHEAP DELEGATE | BUILDER | STRONG REASONING | FRONTIER ESCALATION
+Model: <current main model or exact bundled role with model/effort>
 Impact: local | files<=2 | modules<=1 | boundary=private
 ```
+
+Derive all five lines from the **same inspection**. Do not summarize first and then independently reconsider routing.
+
+Use this mapping:
+
+- **DIRECT** — local, obvious, bounded work. `Model: current main model`.
+- **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting. Use `high-agency-scout (Haiku/low)` or `high-agency-verifier (Haiku/low)`.
+- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder (Sonnet/medium)`.
+- **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation. Use `high-agency-planner (Opus/high)` before implementation.
+- **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that warrants frontier reasoning. Use `high-agency-advisor (Fable/medium)`; reserve `high-agency-deep-critic (Fable/xhigh)` for rare capability-critical cases.
+
+If `Route` is anything other than **DIRECT**, read `references/model-routing.md` and dispatch the selected bundled role before performing the delegated cognitive work. Do not first attempt the whole problem on the current model merely to earn permission to route it.
+
+The preflight selects the **primary cognitive bottleneck**. Add a second delegated role later only when new evidence creates a distinct need; do not fan out just because multiple roles exist.
+
+The main thread remains the integrator. The preflight does not silently replace the primary conversation model.
+
+### Preflight immutability and drift
+
+The first `Impact:` line is immutable because the hooks use it as the scope baseline. If the task grows, record scope drift rather than rewriting the original preflight.
 
 Use:
 - `local | propagating | high` for expected risk tier;
 - an upper bound for changed code/config files and modules;
 - `boundary=private | shared-api | high-impact`.
 
-Keep the **first estimate immutable**. If the task grows, record scope drift; do not rewrite the estimate to match what happened.
+If later evidence changes only the routing need, record a concise routing escalation/fallback and execute it; do not emit a replacement preflight.
 
-Before finishing, compare the actual diff against that estimate:
+Before finishing, compare the actual diff against the original Impact estimate:
 - **match** → keep the normal targeted-verification path;
 - **minor drift** → extend verification only to the newly affected surface;
-- **major drift or boundary expansion** → inspect the focused final diff, broaden verification only for the expanded risk, and escalate model/reasoning only if the new scope creates a real cognitive bottleneck.
+- **major drift or boundary expansion** → inspect the focused final diff, broaden verification only for the expanded risk, and escalate model/effort only if the new scope creates a real cognitive bottleneck.
 
 The hook can verify file/module spread and known high-impact paths. Public/shared API drift that cannot be inferred from paths must be checked semantically from the final diff.
 
@@ -83,7 +93,7 @@ Stay single-agent unless at least one is true:
 - a bounded mechanical/repetitive subtask can be offloaded much more cheaply;
 - the user explicitly asks for multi-model work.
 
-These triggers are also inputs to the routing preflight above. When one is present, use the smallest useful delegation pattern from `references/model-routing.md` rather than defaulting to a full main-model attempt first.
+These triggers are also inputs to the unified preflight above. When one is present, use the smallest useful delegation pattern from `references/model-routing.md` rather than defaulting to a full main-model attempt first.
 
 The main thread remains the integrator. Give subagents narrow goals and ask for concise evidence, not long prose. Do not delegate a task that the current model can finish faster with context it already holds.
 
