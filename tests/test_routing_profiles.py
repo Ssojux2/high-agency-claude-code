@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENT_DIR = ROOT / "plugins/high-agency/agents"
+SKILL = ROOT / "plugins/high-agency/skills/high-agency-coding/SKILL.md"
 ROUTING = ROOT / "plugins/high-agency/skills/high-agency-coding/references/model-routing.md"
 
 EXPECTED = {
@@ -30,6 +31,19 @@ def frontmatter(path: Path) -> dict[str, str]:
 
 
 class ClaudeRoutingProfileTests(unittest.TestCase):
+    def test_preflight_routes_before_mutation(self):
+        text = SKILL.read_text(encoding="utf-8")
+        self.assertIn("## Routing preflight", text)
+        self.assertIn("Before the first code/config mutation", text)
+        self.assertIn("Do not first attempt the whole problem on the current model merely to earn permission to route it", text)
+        for route in ("DIRECT", "CHEAP DELEGATE", "BUILDER", "STRONG REASONING", "FRONTIER ESCALATION"):
+            self.assertIn(route, text)
+
+    def test_routing_requires_actual_dispatch(self):
+        text = ROUTING.read_text(encoding="utf-8")
+        self.assertIn("actually dispatched", text)
+        self.assertIn("execution stayed on the current model", text)
+
     def test_expected_role_model_effort_pairs(self):
         for filename, expected in EXPECTED.items():
             data = frontmatter(AGENT_DIR / filename)
