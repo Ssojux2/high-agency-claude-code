@@ -21,9 +21,9 @@ This plugin provides role agents with model/effort pinned in frontmatter. If a m
 | `high-agency-advisor` | Fable / medium | ambitious codebase-wide strategy, long-horizon planning, cross-system coordination, difficult review |
 | `high-agency-deep-critic` | Fable / xhigh | rare final escalation for security/high-impact/long-horizon hard reasoning |
 
-## Routing principle
+## Unified-preflight routing principle
 
-The parent skill performs a one-time preflight before the first mutation. Treat that classification as an execution decision, not a suggestion. If it selects a delegated route, dispatch the matching bundled role instead of merely mentioning that a stronger/cheaper model would be useful.
+The parent skill emits one unified preflight before the first mutation. Its `Route` and `Model` lines are the execution decision, not commentary. For a non-DIRECT route, dispatch the matching bundled role named in `Model` instead of merely mentioning that a stronger/cheaper model would be useful.
 
 Prefer the smallest sufficient role.
 
