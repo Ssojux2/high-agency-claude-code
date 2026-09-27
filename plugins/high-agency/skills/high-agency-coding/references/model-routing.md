@@ -23,6 +23,8 @@ This plugin provides role agents with model/effort pinned in frontmatter. If a m
 
 ## Routing principle
 
+The parent skill performs a one-time preflight before the first mutation. Treat that classification as an execution decision, not a suggestion. If it selects a delegated route, dispatch the matching bundled role instead of merely mentioning that a stronger/cheaper model would be useful.
+
 Prefer the smallest sufficient role.
 
 - **Haiku** for speed/scale and deterministic read-heavy work.
@@ -113,7 +115,7 @@ If `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is active, treat per-role model pins as ov
 
 Do not use experimental agent teams as a fallback mechanism. Use ordinary bounded subagents or stay in the main thread.
 
-Do not silently claim a Fable/Opus role ran when the runtime provides no proof of the served model. The doctor skill can report configuration and override risks separately.
+Do not silently claim a Fable/Opus role ran when the runtime provides no proof of the served model. A routing decision is only considered executed when the matching bundled role was actually dispatched; otherwise report that execution stayed on the current model. The doctor skill can report configuration and override risks separately.
 
 
 ## Delegation budget
