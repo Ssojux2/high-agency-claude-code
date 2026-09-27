@@ -34,6 +34,20 @@ For a local reversible change:
 
 For uncertain or multi-step work, keep a short working plan in context. Ask the user only when materially different interpretations affect outcomes, side effects, or irreversible choices.
 
+## Routing preflight
+
+Before the first code/config mutation, classify the task once. This is a lightweight routing decision, not a planning ceremony.
+
+- **DIRECT** — local, obvious, bounded work: stay on the current main model.
+- **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting: use scout/verifier.
+- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work: use builder.
+- **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation: use planner before implementation.
+- **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that remains unresolved after a strong attempt: use advisor/deep-critic on a bounded evidence packet.
+
+If the classification is anything other than **DIRECT**, read `references/model-routing.md` before deciding the delegated role. Do not first attempt the whole problem on the current model merely to earn permission to route it.
+
+The main thread remains the integrator; this preflight selects where cognition should happen, not which model owns the whole session.
+
 ## Impact calibration
 
 After enough inspection to understand the likely change, but **before the first code/config mutation**, write exactly one compact estimate:
@@ -69,7 +83,7 @@ Stay single-agent unless at least one is true:
 - a bounded mechanical/repetitive subtask can be offloaded much more cheaply;
 - the user explicitly asks for multi-model work.
 
-When one of these triggers is present, read `references/model-routing.md` and use the smallest useful delegation pattern.
+These triggers are also inputs to the routing preflight above. When one is present, use the smallest useful delegation pattern from `references/model-routing.md` rather than defaulting to a full main-model attempt first.
 
 The main thread remains the integrator. Give subagents narrow goals and ask for concise evidence, not long prose. Do not delegate a task that the current model can finish faster with context it already holds.
 
