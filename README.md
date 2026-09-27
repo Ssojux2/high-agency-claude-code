@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.9.0**
+Current version: **0.10.0**
 
 ## Install
 
@@ -40,7 +40,9 @@ When delegation has real leverage, the plugin can use bundled role agents:
 
 The main conversation remains the integrator. Small tasks use **zero** subagents. Fable roles are deliberately tool-free: the main thread/Haiku gathers a compact evidence packet, then Fable reasons over that packet as a one-shot advisor or critic.
 
-The detailed policy is in `skills/high-agency-coding/references/model-routing.md` and is read only when delegation is justified. Fable is reserved for ambitious long-horizon strategy or the hardest cognitive bottlenecks; routine execution stays on the main model/Sonnet/Haiku.
+Before the first code/config mutation, High Agency now performs a lightweight routing preflight: DIRECT, CHEAP DELEGATE, BUILDER, STRONG REASONING, or FRONTIER ESCALATION. Non-DIRECT classifications load `skills/high-agency-coding/references/model-routing.md` immediately, so the current model does not need to fail first before discovering that a different role should handle the cognitive bottleneck.
+
+Fable is reserved for ambitious long-horizon strategy or the hardest cognitive bottlenecks; routine execution stays on the main model/Sonnet/Haiku. A routing choice counts as executed only when the matching bundled role is actually dispatched; merely saying that Opus/Fable would be useful does not count.
 
 ## What can and cannot self-adjust
 
@@ -366,7 +368,9 @@ End-to-end success claims are intentionally not published without equal-model/eq
 
 ## Development status
 
-**v0.9.0 is the current evaluation baseline.**
+**v0.10.0 is the current evaluation baseline.**
+
+v0.10.0 fixes a self-gating problem in adaptive routing: routing is now classified before the first mutation, and runtime evals distinguish an actual delegated dispatch from a prose-only model recommendation.
 
 Further runtime features, routing rules, thresholds, or orchestration complexity should not be added based on intuition alone. The next behavioral changes should be driven by real end-to-end Codex/Claude Code runs using the existing `evals/` scenarios and comparable model/budget settings, including impact-estimate calibration.
 
