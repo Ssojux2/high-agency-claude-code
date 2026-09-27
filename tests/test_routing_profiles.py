@@ -31,13 +31,25 @@ def frontmatter(path: Path) -> dict[str, str]:
 
 
 class ClaudeRoutingProfileTests(unittest.TestCase):
-    def test_preflight_routes_before_mutation(self):
+    def test_unified_preflight_drives_route_and_model(self):
         text = SKILL.read_text(encoding="utf-8")
-        self.assertIn("## Routing preflight", text)
-        self.assertIn("Before the first code/config mutation", text)
+        self.assertIn("## Unified preflight", text)
+        self.assertIn("before the first code/config mutation", text)
+        self.assertIn("write exactly one compact five-line preflight block", text)
+        for field in ("Preflight:", "Complexity:", "Route:", "Model:", "Impact:"):
+            self.assertIn(field, text)
+        self.assertIn("Derive all five lines from the **same inspection**", text)
+        self.assertIn("Do not summarize first and then independently reconsider routing", text)
         self.assertIn("Do not first attempt the whole problem on the current model merely to earn permission to route it", text)
         for route in ("DIRECT", "CHEAP DELEGATE", "BUILDER", "STRONG REASONING", "FRONTIER ESCALATION"):
             self.assertIn(route, text)
+        for role in ("high-agency-scout", "high-agency-verifier", "high-agency-builder", "high-agency-planner", "high-agency-advisor", "high-agency-deep-critic"):
+            self.assertIn(role, text)
+
+    def test_original_impact_line_remains_immutable(self):
+        text = SKILL.read_text(encoding="utf-8")
+        self.assertIn("The first `Impact:` line is immutable", text)
+        self.assertIn("do not emit a replacement preflight", text)
 
     def test_routing_requires_actual_dispatch(self):
         text = ROUTING.read_text(encoding="utf-8")
