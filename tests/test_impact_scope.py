@@ -110,5 +110,20 @@ class ImpactScopeTests(unittest.TestCase):
         self.assertEqual(drift["severity"], "none")
 
 
+    def test_parse_impact_inside_unified_preflight(self):
+        estimate = parse_impact(
+            "Preflight: fix auth callback routing\n"
+            "Complexity: high\n"
+            "Route: STRONG REASONING\n"
+            "Model: high-agency-planner (Opus/high)\n"
+            "Impact: propagating | files<=4 | modules<=2 | boundary=shared-api"
+        )
+        self.assertIsNotNone(estimate)
+        self.assertEqual(estimate["tier"], "propagating")
+        self.assertEqual(estimate["files_max"], 4)
+        self.assertEqual(estimate["modules_max"], 2)
+        self.assertEqual(estimate["boundary"], "shared-api")
+
+
 if __name__ == "__main__":
     unittest.main()
