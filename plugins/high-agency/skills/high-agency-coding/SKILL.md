@@ -42,21 +42,25 @@ After enough read-only inspection to understand the likely task shape, but **bef
 Preflight: <one short task-shape summary>
 Complexity: low | medium | high | frontier
 Route: DIRECT | CHEAP DELEGATE | BUILDER | STRONG REASONING | FRONTIER ESCALATION
-Model: <current main model or exact bundled role with model/effort>
+Model: <current main model or bundled role + resolved model ID/alias + supported effort>
 Impact: local | files<=2 | modules<=1 | boundary=private
 ```
 
 Derive all five lines from the **same inspection**. Do not summarize first and then independently reconsider routing.
 
+Before a non-DIRECT preflight, read `references/model-routing.md` and resolve the latest available model for the chosen capability family from the current runtime catalog. Model names remembered from training, old conversations, examples, or a previous session are not a model catalog. Refresh once per task before the first delegation, and again after an account/provider/client change or a model rejection. DIRECT tasks do not need a model lookup.
+
 Use this mapping:
 
 - **DIRECT** — local, obvious, bounded work. `Model: current main model`.
-- **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting. Use `high-agency-scout (Haiku/low)` or `high-agency-verifier (Haiku/low)`.
-- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder (Sonnet/medium)`.
-- **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation. Use `high-agency-planner (Opus/high)` before implementation.
-- **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that warrants frontier reasoning. Use `high-agency-advisor (Fable/medium)`; reserve `high-agency-deep-critic (Fable/xhigh)` for rare capability-critical cases.
+- **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting. Use `high-agency-scout` or `high-agency-verifier` with the latest available Haiku and supported low effort.
+- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder` with the latest available Sonnet and supported medium effort.
+- **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation. Use `high-agency-planner` with the latest available Opus and supported high effort before implementation.
+- **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that warrants frontier reasoning. Use `high-agency-advisor` with the latest available Fable and supported medium effort; reserve `high-agency-deep-critic` with supported xhigh effort for rare capability-critical cases.
 
-If `Route` is anything other than **DIRECT**, read `references/model-routing.md` and dispatch the selected bundled role before performing the delegated cognitive work. Do not first attempt the whole problem on the current model merely to earn permission to route it.
+If `Route` is anything other than **DIRECT**, read `references/model-routing.md` and dispatch the selected bundled role before performing the delegated cognitive work. Pass the exact latest available model ID through the per-invocation `model` parameter when the runtime supports it; this takes precedence over the bundled family alias. Do not first attempt the whole problem on the current model merely to earn permission to route it.
+
+Bundled `haiku`, `sonnet`, `opus`, and `fable` aliases are compatibility defaults, not proof of the newest served version. An alias can inherit an older same-family main model or resolve differently by provider. If no current catalog or explicit model override is available, use the supported alias/fallback and report latest availability unverified rather than inventing an ID. Respect explicit user/admin pins and forced-model settings; report a latest-model conflict instead of changing global settings.
 
 The preflight selects the **primary cognitive bottleneck**. Add a second delegated role later only when new evidence creates a distinct need; do not fan out just because multiple roles exist.
 

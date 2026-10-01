@@ -8,11 +8,26 @@ Keep the current main model as integrator. Use plugin subagents only when a diff
 
 Do not spawn agents merely to imitate a team. Handoff and duplicate context are costs.
 
-This plugin provides role agents with model/effort pinned in frontmatter. If a model is blocked or unavailable, accept Claude Code's supported fallback/substitution and continue.
+This plugin provides role agents with **versionless family aliases** and desired effort levels in frontmatter. Those are compatibility defaults, not immutable model-version pins. If a model is blocked or unavailable, accept Claude Code's supported fallback/substitution and continue.
+
+## Current model catalog — resolve before routing
+
+1. Before the first delegation in each task, inspect the model inventory/capabilities exposed by the current runtime for the active account, provider and client. Use an existing host/SDK model-list capability when exposed; do not invent a Claude CLI `models list` command. Reuse the result within that task and refresh after an account/provider/client change or a rejected model.
+2. Resolve the newest available stable release within the chosen Haiku/Sonnet/Opus/Fable family. Use explicit runtime release/upgrade metadata where available, otherwise compare numeric versions within that family. Do not compare model families by version alone. Ignore unavailable, hidden, disabled, preview-only or disallowed entries unless the user explicitly opts into a preview. Public release docs identify releases but do not prove access by this account/provider.
+3. Pass the **exact model ID** through the bundled role's per-invocation `model` parameter when supported. Keep the role's tool restrictions and bounded task intact. Per-invocation `model` takes precedence over frontmatter on supported clients. Do not write a discovered version back into the installed plugin or global settings.
+4. Do not assume a versionless alias guarantees the latest model: a same-family alias can inherit the main conversation's older exact model, and provider/gateway alias mappings can lag newer releases. Prefer the exact current catalog ID to avoid this same-family inheritance. If the host exposes only aliases, retain a supported alias and report latest availability unverified; never fabricate a full ID from memory.
+5. Respect explicit user/admin pins and `availableModels` restrictions. Inspect only the safe routing keys: `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_FABLE_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`. A setting/allowlist is not itself proof of availability. Report a pin/latest-version conflict; do not silently unset or override an intentional pin. Do not print credentials or full settings files.
+6. When `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is enabled, the runtime can ignore both the per-invocation model and frontmatter. Report the forced route, not a fictitious latest-model dispatch. If FORCE is enabled without a subagent model, the main model is the effective forced source.
+7. Choose only effort levels supported by the resolved model and installed client. Bundled low/medium/high/xhigh levels are desired policy, not a universal capability declaration. If a role's fixed effort cannot be served and the runtime offers no supported per-invocation adjustment, choose a compatible role or stay on the main model. Do not mutate the installed role just to retry.
+8. If the catalog or per-invocation control is unavailable, use the native family alias/substitution or current main model. Report catalog source, requested ID or alias, fallback, and the effective served model only when runtime metadata proves it. Latest availability and served-model identity are separate checks. Use at most one catalog refresh and one supported fallback attempt after rejection, then continue on the main model.
+
+No API key, new SDK installation, paid model probe, nested Claude session, or global config rewrite is required by this policy. In hosts without model-list access, alias routing remains supported but cannot guarantee the globally newest release. Keep the CLI current so its native alias/catalog mappings can update; report an outdated client instead of auto-updating it during a coding task.
 
 ## Available roles
 
-| Role | Model / effort | Use |
+Every family below means the latest available version resolved above, not a remembered release number.
+
+| Role | Family / desired effort | Use |
 |---|---|---|
 | `high-agency-scout` | Haiku / low | broad read-only mapping, grep, file inventory, simple API/doc location |
 | `high-agency-verifier` | Haiku / low | targeted test execution, command results, deterministic verification reporting |
@@ -23,7 +38,7 @@ This plugin provides role agents with model/effort pinned in frontmatter. If a m
 
 ## Unified-preflight routing principle
 
-The parent skill emits one unified preflight before the first mutation. Its `Route` and `Model` lines are the execution decision, not commentary. For a non-DIRECT route, dispatch the matching bundled role named in `Model` instead of merely mentioning that a stronger/cheaper model would be useful.
+The parent skill emits one unified preflight before the first mutation. Its `Route` and `Model` lines are the execution decision, not commentary. For a non-DIRECT route, dispatch the matching bundled role named in `Model` with the resolved model, instead of merely mentioning that a stronger/cheaper model would be useful.
 
 Prefer the smallest sufficient role.
 
@@ -45,9 +60,9 @@ The advisor pattern is preferred over handing the entire task to Fable: Fable se
 - Local/obvious: main thread; no planner.
 - Normal multi-step: current main model with a short plan.
 - Large unfamiliar repo: scout first, then main thread.
-- Everyday complex architecture: planner (Opus/high).
-- Ambitious codebase-wide or long-horizon architecture: gather evidence with main/scout, then advisor (Fable/medium) on a bounded packet.
-- Capability-critical strategy where medium is insufficient: deep-critic (Fable/xhigh) on a bounded packet, rarely.
+- Everyday complex architecture: planner (latest available Opus/high).
+- Ambitious codebase-wide or long-horizon architecture: gather evidence with main/scout, then advisor (latest available Fable/medium) on a bounded packet.
+- Capability-critical strategy where medium is insufficient: deep-critic (Fable/xhigh) on a bounded packet, rarely and only when supported.
 
 Do not send routine planning to Opus or Fable.
 
@@ -64,7 +79,7 @@ Do not send routine planning to Opus or Fable.
 - Running targeted tests and reporting exact output: verifier.
 - Failure requires interpretation: main thread.
 - Complex failure after two evidence-based attempts: planner (Opus/high).
-- Persistent long-horizon or cross-system failure after that: main/scout packages the evidence, then advisor (Fable/medium) or deep-critic (Fable/xhigh).
+- Persistent long-horizon or cross-system failure after that: main/scout packages the evidence, then advisor (Fable/medium) or deep-critic (Fable/xhigh), with supported effort.
 
 ### Review
 
@@ -75,14 +90,14 @@ Do not send routine planning to Opus or Fable.
 
 ## Effort policy
 
-The role definitions encode common effort levels so the main session does not need maximum effort for every subtask.
+The role definitions encode desired effort levels so the main session does not need maximum effort for every subtask. Validate these against the selected model/client rather than assuming identical support across versions.
 
 - **low** — deterministic search/test/reporting.
 - **medium** — normal implementation and economical Fable advisor work.
 - **high** — complex Opus reasoning.
-- **xhigh** — rare Fable escalation when maximum depth matters.
+- **xhigh** — rare Fable escalation when supported and maximum depth matters.
 
-Fable thinking is always adaptive; effort controls how much reasoning it spends. Prefer Fable/medium for advisor work and reserve xhigh for capability-sensitive cases.
+Prefer supported medium effort for advisor work and reserve supported xhigh for capability-sensitive cases.
 
 ## Parallelism
 
@@ -100,10 +115,9 @@ Bad:
 
 Ask each subagent for concise findings, file paths, commands, evidence, a strategy brief, or a bounded patch—not a full restatement of context.
 
-
 ## Explicit fallback chains
 
-Do not block the task because a preferred delegated role/model is unavailable.
+Do not block the task because a preferred delegated role/model is unavailable. Resolve every candidate family from the same current catalog and use supported efforts only.
 
 - **scout / verifier:** Haiku low → Sonnet low/medium → current main model
 - **builder:** Sonnet medium → current main model
@@ -116,7 +130,6 @@ If `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is active, treat per-role model pins as ov
 Do not use experimental agent teams as a fallback mechanism. Use ordinary bounded subagents or stay in the main thread.
 
 Do not silently claim a Fable/Opus role ran when the runtime provides no proof of the served model. A routing decision is only considered executed when the matching bundled role was actually dispatched; otherwise report that execution stayed on the current model. The doctor skill can report configuration and override risks separately.
-
 
 ## Delegation budget
 
@@ -139,3 +152,9 @@ Give each role the smallest self-contained packet that preserves correctness:
 5. **Stop condition** — return instead of exploring beyond the delegated surface.
 
 Especially for Fable, gather evidence first with main/Haiku and pass a compact packet rather than duplicating a large repository context.
+
+## Sources
+
+Behavior verified 2026-10-01. Documentation is not proof of account-specific access:
+- https://code.claude.com/docs/en/model-config#model-aliases
+- https://code.claude.com/docs/en/sub-agents#choose-a-model
