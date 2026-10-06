@@ -1,22 +1,16 @@
 ---
 name: high-agency-doctor
-description: Use when diagnosing High Agency installation, routing, hooks, Fable/Opus/Sonnet/Haiku profiles, effort configuration, or unexpected delegation behavior in Claude Code. Performs read-only checks and never modifies project files.
+description: Diagnose High Agency installation, hook activation, native subagent routing, model/effort overrides, and missing runtime evidence in Claude Code without changing project files or settings.
 ---
 
 # High Agency Doctor — Claude Code
 
-Diagnose configuration without spawning an agent team or modifying project files.
+Use this procedure for both the skill and `/high-agency:doctor`. Do not run model probes unless the user explicitly asks for them.
 
-Do not run model probes unless the user explicitly asks for them.
+## Prerequisites and safe settings
 
-## Checks
-
-Run these cheap read-only checks:
-
-1. `claude --version`
-2. `python3 --version`
-3. `git --version`
-4. Inspect only these environment variables:
+1. Run `claude --version`, `python --version`, and `git --version`. The native hook launcher requires **Python 3.10+ available as `python`** on Windows, Linux, and macOS. An activated virtual environment can supply it. Report a missing/wrong interpreter; do not install Python, add aliases, or rewrite global configuration automatically.
+2. Inspect only these environment variables and the same keys under settings `env`:
    - `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`
    - `CLAUDE_CODE_SUBAGENT_MODEL`
    - `CLAUDE_CODE_EFFORT_LEVEL`
@@ -25,64 +19,53 @@ Run these cheap read-only checks:
    - `ANTHROPIC_DEFAULT_SONNET_MODEL`
    - `ANTHROPIC_DEFAULT_OPUS_MODEL`
    - `ANTHROPIC_DEFAULT_FABLE_MODEL`
-5. Inspect user/project Claude settings only for safe routing-related fields such as:
-   - `model`
-   - `availableModels`
-   - `effortLevel`
-   - `teammateMode`
-   - the environment keys above when stored under `env`
+3. Inspect only `model`, `availableModels`, `effortLevel`, and `teammateMode` in relevant user/project settings. Use JSON parsing. Do **not** print full settings or unrelated environment values.
+4. Check plugin discovery and hook errors using the installed client's supported diagnostics. A configuration file alone does not prove that hooks executed. Treat missing recorded events as **UNVERIFIED**.
 
-Use JSON parsing. Do **not** print full settings or unrelated environment variables.
+## Inventory and input capabilities
 
-## Current model catalog
+Read `../high-agency-coding/references/model-routing.md`. Use only an existing, authorized host/SDK inventory capability. Do not invent a CLI model-list command, install an SDK, start a nested Claude session, or run inference to discover models.
 
-Read `../high-agency-coding/references/model-routing.md`. Inspect any current account/provider model inventory exposed by the host. Do not invent a CLI model-list command, install an SDK, start a nested Claude session, or run inference solely to discover models.
+Inspect the exposed `Agent` input schema before selecting an override. Current alias-only schemas accept `haiku`, `sonnet`, `opus`, and `fable`; do not put a versioned ID into an enum that rejects it. Use an exact catalog ID only when the live input schema permits it. Preserve the selected role's tools and task boundaries.
 
-Compare the selected family against the latest available stable version in that inventory. Versionless aliases are healthy compatibility defaults, but not proof of freshness: the alias can inherit an older same-family main model, and provider/gateway defaults can lag newer releases. Prefer the exact available model ID via the role's supported per-invocation `model` parameter. Preserve the role's tool restrictions.
+Separate catalog query success, freshness, account entitlement, and actual dispatch. A catalog, `availableModels` allowlist, versionless alias, or public release note does not prove all four. Same-family inheritance and provider mappings can lag a release. Without a current inventory, report latest availability **UNVERIFIED** and retain the supported native alias/fallback. Do not remove an intentional pin.
 
-Flag explicit family environment pins, older same-family session models, provider differences, outdated clients, unsupported effort, and forced routing. Do not silently remove pins or rewrite user settings. Public documentation identifies new releases but does not prove account-specific access. `availableModels` is an allowlist, not a live availability API. If no current inventory is exposed, report latest availability **UNVERIFIED** and retain the supported native alias/fallback.
+## Recorded routing evidence
 
-## Interpret
+Read the current session's observer report:
 
-Flag these conditions:
+```sh
+python "${CLAUDE_PLUGIN_ROOT}/hooks/routing_observer.py" --report --session-id "${CLAUDE_SESSION_ID}"
+```
 
-- **WARN** `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is enabled: it can force one model onto every subagent and override both per-invocation and frontmatter model routing. If FORCE is enabled without a subagent model, the main model is the forced source.
-- **INFO** `CLAUDE_CODE_SUBAGENT_MODEL` is set without FORCE: report it as a global/default influence, but do not assume it overrides every explicit role.
-- **WARN** `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, or `ANTHROPIC_DEFAULT_FABLE_MODEL` pins an older release: report the latest-version conflict without changing the pin.
-- **WARN** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`: High Agency is designed around ordinary bounded subagents, not experimental agent teams. Keep High Agency routing on normal subagents unless the user deliberately chooses teams.
-- **INFO** session effort/model may override or differ from settings; `/model`, `/effort`, and `/status` are the interactive sources of truth. `/tasks` can expose the actual model of a running subagent on supported clients.
-- **UNVERIFIED** model availability: a `model: fable|opus|sonnet|haiku` profile does not prove the account will serve the latest release or that a subagent has actually run.
+`${CLAUDE_SESSION_ID}` is a supported skill string substitution, not an assumed shell environment variable. If the client leaves it unresolved, run `--report` without a session ID and report current-session observations as UNVERIFIED. Never pick another recent session automatically.
 
-The Fable advisor/deep-critic are intentionally tool-free one-shot roles. Treat that as healthy, not a missing-tool error.
+Interpret fields separately:
 
-## Routing contract
+| Evidence | Meaning |
+|---|---|
+| `requested` and its source | Explicit invocation model or desired bundled role default; effort is requested policy |
+| `resolvedModel` | Native host resolution metadata, when exposed |
+| `modelsUsed` | Native host-reported model history; do not derive it from answer text or the parent hook `model` |
+| `dispatch_status` | Completed, launched, failed, or only an observed response; an async launch does not prove eventual completion |
+| `fallback_status` | Observed model difference/swap or unknown; a difference does not prove why it happened |
+| `effort_status` | UNVERIFIED unless a future supported adapter exposes actual served effort |
+| `capabilities` | Documented adapter support, not proof of the installed client's behavior |
 
-Expected fallback chains, with current available versions and supported efforts:
+The observer stores bounded model/identity metadata only. It does not query models, dispatch agents, read credentials, or copy prompts and answers. Missing metadata remains UNVERIFIED.
 
-- scout/verifier: **Haiku → Sonnet low/medium → current main model**
-- builder: **Sonnet medium → current main model**
-- normal complex planner/root cause: **Opus high → Fable medium → current main model**
-- long-horizon advisor: **Fable medium → Opus high → current main model**
-- deep critic: **Fable xhigh → Opus xhigh/high → current main model**
+## Interpret configuration
 
-If `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is active, report that the configured chain is logically present but runtime routing is overridden.
+- Warn when `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` forces a global route. With FORCE but no subagent model, the main model is the forced source. Compare observations; do not claim per-role routing succeeded from settings alone.
+- Treat `CLAUDE_CODE_SUBAGENT_MODEL` without FORCE as a default influence. Report user/admin family pins and unsupported effort without changing them.
+- Report `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; High Agency uses ordinary bounded subagents. Do not enable teams as a fallback.
+- Use `/model`, `/effort`, `/status`, and `/tasks` only when supported to inspect the current session. Static settings can differ from session overrides.
+- Treat tool-free Fable advisor/deep-critic roles as intentional. The main model remains the integrator.
 
 ## Optional model probe
 
-Only if the user explicitly asks to probe models:
-
-- use one-turn bounded probes;
-- prefer tool-free roles for Fable;
-- probe only roles relevant to the user's task;
-- report dispatch success/failure and any effective model metadata the runtime actually exposes;
-- do not claim model identity is verified when the runtime gives no proof;
-- do not use experimental agent teams for the probe.
+Only if the user explicitly asks to probe models, or supplies `--probe-models`, make the smallest bounded native subagent request for a route relevant to the problem. Use only supported input fields; do not probe every model. Prefer tool-free Fable roles. Report native dispatch and metadata honestly, including failures or absent identity evidence. No SDK installation, credentials discovery, nested CLI session, or global setting rewrite is part of this procedure.
 
 ## Output
 
-Return a compact table:
-
-| Check | Status | Detail |
-|---|---|---|
-
-Then list only actionable warnings and the effective fallback chain.
+Return `Check | Status | Detail` for interpreter/hook activation, inventory query/freshness, entitlement, input capabilities, requested/resolved/modelsUsed, effort, and fallback. Then list actionable warnings only. Use the fallback chains in the routing reference rather than maintaining a second copy here.

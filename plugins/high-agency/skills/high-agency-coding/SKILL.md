@@ -34,6 +34,12 @@ For a local reversible change:
 
 For uncertain or multi-step work, keep a short working plan in context. Ask the user only when materially different interpretations affect outcomes, side effects, or irreversible choices.
 
+## Activate verification
+
+Before the first project mutation, run `python "<installed-plugin-root>/hooks/verification_state.py" --activate` through the host shell (Bash or PowerShell). Resolve the root from this skill's installed location. Require Python 3.10+ exposed as `python`; an activated virtual environment is sufficient. Do not install an interpreter or change global settings automatically.
+
+The trusted PreToolUse hook binds activation to the actual session payload and captures the baseline; an already active task is preserved. This covers native Skill loading without a prompt keyword. The command's output alone does not prove hook activation. If hooks are disabled/untrusted, continue with manual verification and report the guard as UNVERIFIED.
+
 ## Unified preflight
 
 After enough read-only inspection to understand the likely task shape, but **before the first code/config mutation**, write exactly one compact five-line preflight block:
@@ -58,9 +64,11 @@ Use this mapping:
 - **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation. Use `high-agency-planner` with the latest available Opus and supported high effort before implementation.
 - **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that warrants frontier reasoning. Use `high-agency-advisor` with the latest available Fable and supported medium effort; reserve `high-agency-deep-critic` with supported xhigh effort for rare capability-critical cases.
 
-If `Route` is anything other than **DIRECT**, read `references/model-routing.md` and dispatch the selected bundled role before performing the delegated cognitive work. Pass the exact latest available model ID through the per-invocation `model` parameter when the runtime supports it; this takes precedence over the bundled family alias. Do not first attempt the whole problem on the current model merely to earn permission to route it.
+If `Route` is anything other than **DIRECT**, read `references/model-routing.md` and dispatch the selected bundled role before performing the delegated cognitive work. Check the live input schema before using the per-invocation `model` parameter: alias-only schemas accept family aliases, not arbitrary versioned IDs. Pass an exact catalog ID only when the exposed schema permits it. Preserve the role's tools and task boundaries. Do not first attempt the whole problem on the current model merely to earn permission to route it.
 
 Bundled `haiku`, `sonnet`, `opus`, and `fable` aliases are compatibility defaults, not proof of the newest served version. An alias can inherit an older same-family main model or resolve differently by provider. If no current catalog or explicit model override is available, use the supported alias/fallback and report latest availability unverified rather than inventing an ID. Respect explicit user/admin pins and forced-model settings; report a latest-model conflict instead of changing global settings.
+
+Keep requested model/effort, native `resolvedModel`, and host-reported `modelsUsed` distinct. Use recorded observer metadata when available; missing fields remain unverified. A catalog query or launch alone does not prove the model that served the completed subtask.
 
 The preflight selects the **primary cognitive bottleneck**. Add a second delegated role later only when new evidence creates a distinct need; do not fan out just because multiple roles exist.
 

@@ -2,7 +2,13 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.10.1**
+Current version: **0.12.0**
+
+## Prerequisites
+
+**Python 3.10+ must be available as `python` on the PATH inherited by Claude Code on native Windows, Linux, and macOS.** Hooks use native `command: "python"` with an `args` array on every platform. An installation exposed only as `python3`, or a shell-only alias, does not satisfy that launcher.
+
+An activated virtual environment is acceptable if Claude Code inherits its PATH. The plugin does not install Python, create global aliases, or edit global PATH/configuration. CI runs native Windows, Linux, and macOS regression suites and real Claude Code configuration checks. These verify component loading and hook registration without model inference; authenticated task execution remains a separate acceptance check.
 
 ## Install
 
@@ -15,9 +21,7 @@ In Claude Code:
 
 Start a new session after installation so bundled agents and hooks are loaded.
 
-> **v0.8.2 manifest compatibility:** `agents/` and `commands/` use Claude Code's standard automatic discovery. They are intentionally not declared in `.claude-plugin/plugin.json`, because current Claude Code builds can reject those manifest fields even though older plugin-development references document them.
-
-> **v0.8.3 hook reliability:** fixes repeated `PostToolUse:Bash hook error` messages caused by a missing Python `tempfile` import in the verification-state hook. The tracking hook now also fails open by default so an unexpected diagnostic/state error does not interrupt Claude Code. Set `HIGH_AGENCY_HOOK_DEBUG=1` only when debugging a hook failure.
+> **v0.12.0 routing audit:** catalog query success, freshness, account entitlement, and native dispatch are now separate evidence checks. Read-only routing observations report only the metadata the host exposes. Validation combines regression fixtures with real Claude Code component loading and hook registration on Windows, Linux, and macOS CI. Authenticated end-to-end routing still needs user-run evaluation.
 
 ## Core behavior
 
@@ -27,9 +31,9 @@ It does not require planning documents, TDD, worktrees, subagents, full suites, 
 
 ## Adaptive Claude routing
 
-When delegation has real leverage, the plugin can use bundled role agents:
+When delegation has real leverage, the plugin can use bundled role agents. Inspect the selected family in the active host's current catalog for the same account and provider. Request an exact model ID only when the currently exposed native `model` input schema explicitly permits it. When that schema accepts only Haiku/Sonnet/Opus/Fable family aliases, use a supported alias; a catalog ID cannot expand the tool's accepted inputs. Bundled aliases are compatibility defaults and do not guarantee freshness. Alias routing leaves latest-version freshness and served identity **UNVERIFIED** unless independent host evidence establishes them.
 
-| Role | Model / effort | Purpose |
+| Role | Model family / desired effort | Purpose |
 |---|---|---|
 | `high-agency-scout` | Haiku / low | broad read-only mapping |
 | `high-agency-builder` | Sonnet / medium | isolated implementation |
@@ -38,7 +42,7 @@ When delegation has real leverage, the plugin can use bundled role agents:
 | `high-agency-advisor` | Fable / medium | ambitious codebase-wide strategy and long-horizon coordination |
 | `high-agency-deep-critic` | Fable / xhigh | rare security/high-impact/long-horizon hard reasoning escalation |
 
-The main conversation remains the integrator. Small tasks use **zero** subagents. Fable roles are deliberately tool-free: the main thread/Haiku gathers a compact evidence packet, then Fable reasons over that packet as a one-shot advisor or critic.
+The main conversation remains the integrator. Small tasks use **zero** subagents. Effort levels are desired policy and must be supported by the chosen model and client; otherwise record a supported substitute or main-model fallback. Fable roles are deliberately tool-free: the main thread/Haiku gathers a compact evidence packet, then Fable reasons over that packet as a one-shot advisor or critic.
 
 Before the first code/config mutation, High Agency now emits one unified preflight from the same read-only inspection:
 
@@ -50,17 +54,17 @@ Model: <current main model or exact bundled role with model/effort>
 Impact: local | files<=N | modules<=N | boundary=private|shared-api|high-impact
 ```
 
-The summary, complexity, route, model, and impact estimate are one decision. Non-DIRECT routes load `skills/high-agency-coding/references/model-routing.md` and dispatch the selected role before the delegated reasoning/work begins.
+The summary, complexity, route, model, and impact estimate are one decision. For a non-DIRECT route, the skill loads `skills/high-agency-coding/references/model-routing.md` and requests the selected native role before delegated work begins, using supported model/effort controls. If the runtime cannot serve the route, record the fallback and continue.
 
 Fable is reserved for ambitious long-horizon strategy or the hardest cognitive bottlenecks; routine execution stays on the main model/Sonnet/Haiku. A routing choice counts as executed only when the matching bundled role is actually dispatched; merely saying that Opus/Fable would be useful does not count.
 
 ## What can and cannot self-adjust
 
-High Agency can select among bundled subagent model/effort profiles when Claude Code supports them.
+High Agency can select among bundled subagent model/effort profiles when Claude Code supports them. This is optional skill guidance for bounded native subtasks; hooks and the observer do not force dispatch or launch agents.
 
 It does **not** silently replace the primary conversation model. Session-level model/effort remains controlled by Claude Code/user settings. The skill adapts by deciding whether to keep work in the main thread or route a bounded subtask to a role with a different model/effort.
 
-If a requested model is unavailable or restricted, High Agency uses explicit fallbacks: Haiku→Sonnet→main for scout/verifier, Sonnet→main for builder, Opus→Fable→main for normal complex planning, Fable→Opus→main for long-horizon advice, and Fable→Opus→main for deep critique.
+If a requested model is unavailable or restricted, High Agency uses explicit fallbacks with current catalog models and supported efforts: **Haiku → Sonnet → current main model** for scout/verifier, **Sonnet → current main model** for builder, **Opus → Fable → current main model** for normal complex planning, and **Fable → Opus → current main model** for long-horizon advice or deep critique. After a rejection, refresh at most once and attempt one supported fallback before continuing on the main model. Preserve explicit user/admin pins and report conflicts instead of rewriting settings.
 
 ## Doctor
 
@@ -78,15 +82,36 @@ The doctor is read-only and defaults to static diagnostics. It checks Claude/Pyt
 - `CLAUDE_CODE_SUBAGENT_MODEL`
 - `CLAUDE_CODE_EFFORT_LEVEL`
 - `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
+- `ANTHROPIC_DEFAULT_HAIKU_MODEL`
+- `ANTHROPIC_DEFAULT_SONNET_MODEL`
+- `ANTHROPIC_DEFAULT_OPUS_MODEL`
+- `ANTHROPIC_DEFAULT_FABLE_MODEL`
 
 Key warnings:
 
 - `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` can override every per-role model pin.
 - experimental agent teams are not required by High Agency; ordinary bounded subagents are the supported routing path.
-- Fable/Opus/Sonnet/Haiku availability is **UNVERIFIED** unless the user explicitly requests model probes.
+- catalog query success, freshness, account entitlement/availability, and native dispatch success are separate checks. A role alias, settings allowlist, or successful catalog parse does not prove all four.
+- aliases and family environment pins can resolve to older releases. Missing freshness or availability evidence remains **UNVERIFIED**.
 - use `/model`, `/effort`, and `/status` for the live session view.
 
-Optional model probes are one-turn and opt-in; doctor never fan-outs across all models by default.
+Doctor uses model inventory already exposed by the active host. It does not run paid probes automatically, install an SDK, invent a CLI model-list command, or start nested Claude sessions. A bounded native model probe requires an explicit user request.
+
+## Read-only routing observations
+
+From the plugin root (`plugins/high-agency/` in a checkout), select the current host session explicitly. The same command applies on native Windows, Linux, and macOS; replace the placeholder with the session ID supplied by the host.
+
+```text
+python hooks/routing_observer.py --report --session-id "<current-session-id>"
+```
+
+`--report` alone shows capabilities with observations **UNVERIFIED**; it does not read a current or latest session automatically. Add `--agent-id "<current-agent-id>"` when inspecting a child agent's scope. A missing session/state record stays **UNVERIFIED** rather than falling back to another session.
+
+The observer can read `PostToolUse` events for `Agent|Task`, retaining a requested model from the native tool input and explicit host-exposed resolved-model or `modelsUsed` metadata when present. The report keeps observer capability and requested, resolved, and `modelsUsed` statuses separate. A dispatched role or a requested alias does not establish the served model; absent explicit metadata, that identity remains **UNVERIFIED**. The observer does not infer model identity from response text.
+
+A forced model setting is configuration evidence, and may explain a mismatch between the requested and resolved route. It is not a substitute for host metadata about what was served. Versionless aliases remain useful compatibility defaults without guaranteeing the latest release.
+
+Observation state is kept per session under the plugin state directory. It retains bounded routing metadata without copying prompts, tool output, or credentials. The observer reports evidence; it does not change the main model, dispatch agents, or enforce a routing choice.
 
 ## Impact calibration
 
@@ -349,7 +374,7 @@ The important questions are not hard-coded into a fixed workflow:
 - Should reasoning/model quality escalate?
 - Is another continuation likely to produce new evidence?
 
-That is why the current roadmap is evaluation-first. Structural overhead is already lower than the measured Superpowers paths, but no claim is made that High Agency has a higher task-success rate until equal-model/equal-budget end-to-end benchmarks are run.
+That is why the current roadmap is evaluation-first. Existing structural measurements describe prescribed process footprint. They do not establish a higher end-to-end task-success rate, token or latency savings, or a benefit caused by the 0.12.0 routing changes. Those outcomes need equal-model/equal-budget end-to-end benchmarks.
 
 ### Practical fit
 
@@ -372,9 +397,11 @@ End-to-end success claims are intentionally not published without equal-model/eq
 
 ## Development status
 
-**v0.10.1 is the current evaluation baseline.**
+**v0.12.0 is the current evaluation baseline.**
 
-v0.10.1 unifies task summary, complexity, route, model choice, and impact calibration into one pre-mutation decision. This removes the remaining split where routing and impact could be reasoned about separately.
+This audit release separates catalog lookup from freshness, entitlement, and native dispatch evidence, and adds read-only routing observations. It preserves the main model, bounded role routing, and explicit supported fallbacks.
+
+Validation combines regression fixtures with real Claude Code component loading and hook registration on Windows, Linux, and macOS CI. Actual CLI end-to-end dispatch, served-model identity where exposed, forced-model behavior, and efficiency still require explicit user-run evaluation. See [routing scenarios](evals/routing-scenarios.md) and [runtime validation](docs/runtime-validation.md) for the evidence to capture; these changes do not establish token, latency, or cost savings.
 
 Further runtime features, routing rules, thresholds, or orchestration complexity should not be added based on intuition alone. The next behavioral changes should be driven by real end-to-end Codex/Claude Code runs using the existing `evals/` scenarios and comparable model/budget settings, including impact-estimate calibration.
 

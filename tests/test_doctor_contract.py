@@ -25,10 +25,25 @@ class ClaudeDoctorContractTests(unittest.TestCase):
         text = COMMAND.read_text(encoding="utf-8")
         self.assertRegex(text, r"model:\s*haiku")
         self.assertRegex(text, r"effort:\s*low")
-        self.assertIn("CLAUDE_CODE_SUBAGENT_MODEL_FORCE", text)
         self.assertIn("--probe-models", text)
-        self.assertIn("Task", text)
+        self.assertIn("Agent", text)
         self.assertIn("Do not modify project files or settings", text)
+
+    def test_slash_command_delegates_to_single_diagnostic_source(self):
+        text = COMMAND.read_text(encoding="utf-8")
+        self.assertIn("${CLAUDE_PLUGIN_ROOT}/skills/high-agency-doctor/SKILL.md", text)
+        self.assertIn("$ARGUMENTS", text)
+        self.assertNotIn("CLAUDE_CODE_SUBAGENT_MODEL_FORCE", text)
+        self.assertNotIn("Fallbacks:", text)
+
+    def test_doctor_distinguishes_runtime_evidence_and_platform_requirements(self):
+        text = DOCTOR.read_text(encoding="utf-8")
+        for field in ("requested", "resolvedModel", "modelsUsed", "dispatch_status", "effort_status", "fallback_status"):
+            self.assertIn(field, text)
+        self.assertIn("Python 3.10+ available as `python`", text)
+        self.assertIn("Windows, Linux, and macOS", text)
+        self.assertIn("--report --session-id", text)
+        self.assertIn("alias-only", text)
 
     def test_explicit_fallbacks_exist(self):
         text = ROUTING.read_text(encoding="utf-8")

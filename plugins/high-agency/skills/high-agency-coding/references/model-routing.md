@@ -2,6 +2,15 @@
 
 Load this reference only when delegation is justified by the parent skill.
 
+## Contents
+
+- [Catalog and input capabilities](#current-model-catalog--resolve-before-routing)
+- [Runtime evidence](#runtime-evidence)
+- [Roles](#available-roles)
+- [Stage guidance](#stage-guidance)
+- [Fallbacks](#explicit-fallback-chains)
+- [Delegation budget](#delegation-budget)
+
 ## Principle
 
 Keep the current main model as integrator. Use plugin subagents only when a different capability/cost tier or isolated context materially helps.
@@ -14,14 +23,22 @@ This plugin provides role agents with **versionless family aliases** and desired
 
 1. Before the first delegation in each task, inspect the model inventory/capabilities exposed by the current runtime for the active account, provider and client. Use an existing host/SDK model-list capability when exposed; do not invent a Claude CLI `models list` command. Reuse the result within that task and refresh after an account/provider/client change or a rejected model.
 2. Resolve the newest available stable release within the chosen Haiku/Sonnet/Opus/Fable family. Use explicit runtime release/upgrade metadata where available, otherwise compare numeric versions within that family. Do not compare model families by version alone. Ignore unavailable, hidden, disabled, preview-only or disallowed entries unless the user explicitly opts into a preview. Public release docs identify releases but do not prove access by this account/provider.
-3. Pass the **exact model ID** through the bundled role's per-invocation `model` parameter when supported. Keep the role's tool restrictions and bounded task intact. Per-invocation `model` takes precedence over frontmatter on supported clients. Do not write a discovered version back into the installed plugin or global settings.
-4. Do not assume a versionless alias guarantees the latest model: a same-family alias can inherit the main conversation's older exact model, and provider/gateway alias mappings can lag newer releases. Prefer the exact current catalog ID to avoid this same-family inheritance. If the host exposes only aliases, retain a supported alias and report latest availability unverified; never fabricate a full ID from memory.
+3. Inspect the live input schema before using the bundled role's per-invocation `model` parameter. Current alias-only `Agent` schemas accept `haiku`, `sonnet`, `opus`, and `fable`, not arbitrary release IDs. Pass an **exact model ID only when the schema allows it**; otherwise retain a supported alias. Keep the role's tool restrictions and bounded task intact. Supported per-invocation overrides take precedence over frontmatter except where the host documents an inherited/forced route. Do not write a discovered version back into the installed plugin or global settings.
+4. Do not assume a versionless alias guarantees the latest model: a same-family alias can inherit the main conversation's older exact model, and provider/gateway alias mappings can lag newer releases. Prefer the exact current catalog ID only when the input schema permits it to avoid this same-family inheritance. If the host exposes only aliases, retain a supported alias and report latest availability unverified; never fabricate a full ID from memory.
 5. Respect explicit user/admin pins and `availableModels` restrictions. Inspect only the safe routing keys: `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_FABLE_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`. A setting/allowlist is not itself proof of availability. Report a pin/latest-version conflict; do not silently unset or override an intentional pin. Do not print credentials or full settings files.
 6. When `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is enabled, the runtime can ignore both the per-invocation model and frontmatter. Report the forced route, not a fictitious latest-model dispatch. If FORCE is enabled without a subagent model, the main model is the effective forced source.
 7. Choose only effort levels supported by the resolved model and installed client. Bundled low/medium/high/xhigh levels are desired policy, not a universal capability declaration. If a role's fixed effort cannot be served and the runtime offers no supported per-invocation adjustment, choose a compatible role or stay on the main model. Do not mutate the installed role just to retry.
 8. If the catalog or per-invocation control is unavailable, use the native family alias/substitution or current main model. Report catalog source, requested ID or alias, fallback, and the effective served model only when runtime metadata proves it. Latest availability and served-model identity are separate checks. Use at most one catalog refresh and one supported fallback attempt after rejection, then continue on the main model.
 
 No API key, new SDK installation, paid model probe, nested Claude session, or global config rewrite is required by this policy. In hosts without model-list access, alias routing remains supported but cannot guarantee the globally newest release. Keep the CLI current so its native alias/catalog mappings can update; report an outdated client instead of auto-updating it during a coding task.
+
+## Runtime evidence
+
+Separate successful inventory lookup, catalog freshness, account entitlement, and executed dispatch. The bundled `hooks/routing_observer.py` records native `Agent`/`Task` PostToolUse metadata: `requested` with its source, `resolvedModel`, and `modelsUsed` when exposed. It also records supported failure events without copying error text. Read a session explicitly with `--report --session-id <current-session-id>`; `--report` alone reports capabilities and leaves current-session evidence unverified.
+
+`resolvedModel` is a host resolution field. `modelsUsed` is host-reported serving history; neither is reconstructed from answer text or the common parent hook `model`. Missing fields stay unverified. `async_launched` is the backgrounding snapshot and does not prove eventual completion. Desired role effort remains distinct from actual served effort, which this adapter cannot observe. An observed model difference or multiple models does not establish the reason for fallback. Preserve that uncertainty in the preflight/final report.
+
+The observer never dispatches agents, queries an API, reads credentials, or copies prompts/answers. Consult `high-agency-doctor` for its read-only report and capability limits.
 
 ## Available roles
 
@@ -155,6 +172,9 @@ Especially for Fable, gather evidence first with main/Haiku and pass a compact p
 
 ## Sources
 
-Behavior verified 2026-10-01. Documentation is not proof of account-specific access:
+Contracts reviewed 2026-10-06. Documentation and offline fixture tests are not proof of account-specific access or a completed native session:
 - https://code.claude.com/docs/en/model-config#model-aliases
 - https://code.claude.com/docs/en/sub-agents#choose-a-model
+- https://code.claude.com/docs/en/hooks#posttooluse
+
+The installed CLI's `sdk-tools.d.ts` defines the concrete `AgentInput` and `AgentOutput` contract; inspect the current exposed schema instead of assuming a remembered schema version.

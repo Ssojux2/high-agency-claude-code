@@ -7,6 +7,8 @@ description: Use when the user asks Claude to keep working autonomously, iterate
 
 Continue useful work without turning the task into an unbounded loop.
 
+Before the first mutating pass, run `python "<installed-plugin-root>/hooks/verification_state.py" --activate` through the host shell (Bash or PowerShell), using Python 3.10+ and this skill's actual installed root. The PreToolUse hook supplies session identity; do not guess an environment variable. Preserve an already active task. If hooks are unavailable, use manual verification and report the continuation guard as UNVERIFIED. Do not install an interpreter or change global settings automatically.
+
 For each pass:
 
 1. pick the highest-value unresolved acceptance criterion;

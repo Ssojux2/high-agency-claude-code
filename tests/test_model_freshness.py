@@ -26,6 +26,13 @@ class ModelFreshnessTests(unittest.TestCase):
         self.assertIn("exact current catalog ID", routing)
         self.assertIn("Keep the role's tool restrictions", routing)
 
+    def test_alias_only_schema_does_not_accept_arbitrary_model_ids(self):
+        for path in (SKILL, ROUTING, DOCTOR):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("alias-only", text)
+            self.assertIn("schema", text)
+        self.assertIn("exact model ID only when the schema allows it", ROUTING.read_text(encoding="utf-8"))
+
     def test_missing_inventory_is_not_claimed_as_latest(self):
         text = ROUTING.read_text(encoding="utf-8")
         self.assertIn("latest availability unverified", text)
