@@ -220,8 +220,9 @@ class ConfiguredHookLaunchTests(unittest.TestCase):
                     "stop_hook_active": False,
                 }
                 response = self.dispatch(backend, program, "Stop", stop)
-                self.assertEqual(response["decision"], "block")
-                self.assertIn("1/1", response["reason"])
+                self.assertEqual(set(response), {"hookSpecificOutput"})
+                self.assertEqual(response["hookSpecificOutput"]["hookEventName"], "Stop")
+                self.assertIn("1/1", response["hookSpecificOutput"]["additionalContext"])
                 current = self.read_state(stop)
                 self.assertEqual(current["task_id"], original["task_id"])
                 self.assertEqual(current["continuation"]["continuations"], 1)

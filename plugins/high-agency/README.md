@@ -1,12 +1,16 @@
 # high-agency
 
-Version: **0.12.0**
+Version: **0.12.1**
 
 ## Prerequisites
 
+Claude Code **2.1.163+** is required for non-error Stop feedback; CI tests 2.1.290. Clients older than 2.1.139 do not support the native hook `args` field.
+
 **Python 3.10+ must be available as `python` on the PATH inherited by Claude Code on native Windows, Linux, and macOS.** Hooks use native `command: "python"` with an `args` array on every platform. An installation exposed only as `python3`, or a shell-only alias, does not satisfy that launcher.
 
-An activated virtual environment is acceptable if Claude Code inherits its PATH. The plugin does not install Python, create global aliases, or edit global PATH/configuration. CI runs native Windows, Linux, and macOS regression suites and real Claude Code configuration checks. These verify component loading and hook registration without model inference; authenticated task execution remains a separate acceptance check.
+An activated virtual environment is acceptable if Claude Code inherits its PATH. The plugin does not install Python, create global aliases, or edit global PATH/configuration. CI runs native Windows, Linux, and macOS regression suites, configuration checks and real Claude hook execution against a deterministic loopback model fixture. Authenticated task execution remains a separate acceptance check.
+
+Version 0.12.1 sends normal Stop continuation through `additionalContext`, avoiding the former “Stop hook blocking error” label. It also fixes a hook timeout on whitespace-heavy transcripts. Run `python scripts/diagnose_hooks.py` from this directory to check the exact launcher and client version using isolated temporary state. An existing `python3` or `py -3` can start the diagnostic when `python` is missing; the report still flags that launcher mismatch.
 
 ## Contents
 
@@ -30,6 +34,6 @@ The scoped report separates observer capability and requested-model, resolved-mo
 
 State is kept per session under the plugin state directory, without copying prompts, tool output, or credentials. Diagnostics do not run paid probes automatically, install SDKs, or start nested Claude sessions.
 
-The 0.12.0 audit changes are checked with regression fixtures and real Claude Code component loading and hook registration on Windows, Linux, and macOS CI. Authenticated end-to-end evaluation is still needed; token, latency, and cost savings are not established by this patch.
+The 0.12.1 checks exercise actual Claude hook event delivery and bounded continuation using deterministic local model responses on Windows, Linux, and macOS CI. Authenticated end-to-end evaluation is still needed; token, latency, and cost savings are not established by this patch.
 
 See the [repository README](../../README.md), [routing scenarios](../../evals/routing-scenarios.md), and [runtime validation](../../docs/runtime-validation.md) for installation, usage, and evaluation evidence.

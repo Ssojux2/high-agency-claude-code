@@ -12,10 +12,11 @@ import tempfile
 from pathlib import Path
 
 
-def validate(executable: str, root: Path) -> dict:
+def native_cli(executable: str) -> Path | None:
+    """Resolve a native CLI, including npm's Windows installation layout."""
     cli = shutil.which(executable)
     if not cli:
-        return {"passed": False, "error": "Claude CLI executable not found"}
+        return None
     cli_path = Path(cli).resolve()
     if os.name == "nt" and cli_path.suffix.lower() in {".cmd", ".bat"}:
         # npm's shim is a batch script, not an executable. Use the package's
@@ -27,8 +28,13 @@ def validate(executable: str, root: Path) -> dict:
             cli_path.parent.parent / "@anthropic-ai" / "claude-code-win32-x64" / "claude.exe",
         ]
         cli_path = next((item for item in candidates if item.is_file()), None)
-        if cli_path is None:
-            return {"passed": False, "error": "Pass --claude with the native claude.exe path; npm shim cannot be spawned directly"}
+    return cli_path
+
+
+def validate(executable: str, root: Path) -> dict:
+    cli_path = native_cli(executable)
+    if cli_path is None:
+        return {"passed": False, "error": "Claude CLI executable not found; pass --claude with a native binary path"}
     cli = str(cli_path)
     plugin = root / "plugins" / "high-agency"
     report = {"passed": False, "inference_run": False, "checks": []}

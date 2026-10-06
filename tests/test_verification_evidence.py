@@ -441,7 +441,7 @@ class VerificationLifecycleTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(HOOKS / "stop_loop.py")], input=json.dumps(payload),
                                 cwd=self.cwd, env=self.env, capture_output=True, text=True, timeout=20)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout)["decision"], "block")
+        self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["hookEventName"], "Stop")
 
     def test_child_edit_with_current_prompt_can_link_without_start_replay(self):
         path = self.cwd / "local_config.py"

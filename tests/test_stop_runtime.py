@@ -109,8 +109,15 @@ class StopRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         if not debug:
             self.assertEqual(result.stderr, "")
-        self.assertIsInstance(json.loads(result.stdout), dict)
-        return json.loads(result.stdout), result.stderr
+        response = json.loads(result.stdout)
+        self.assertIsInstance(response, dict)
+        if response:
+            # Advisory continuation must not travel through Claude's hook-error
+            # channel, including verification, Impact and diff reminders.
+            self.assertEqual(set(response), {"hookSpecificOutput"})
+            self.assertEqual(response["hookSpecificOutput"]["hookEventName"], "Stop")
+            self.assertTrue(response["hookSpecificOutput"]["additionalContext"])
+        return response, result.stderr
 
     def append_message(self, role, content):
         with self.transcript.open("a", encoding="utf-8") as handle:
@@ -128,14 +135,14 @@ class StopRuntimeTests(unittest.TestCase):
         payload = {**self.payload, "last_assistant_message": MARKER}
         payload.pop("transcript_path")
         result, _ = self.stop(payload)
-        self.assertEqual(result.get("decision"), "block")
-        self.assertIn("1/2", result["reason"])
+        self.assertEqual(result.get("hookSpecificOutput", {}).get("hookEventName"), "Stop")
+        self.assertIn("1/2", result["hookSpecificOutput"]["additionalContext"])
 
     def test_missing_field_uses_transcript_fallback(self):
         self.append_message("assistant", MARKER)
         payload = dict(self.payload)
         payload.pop("last_assistant_message")
-        self.assertEqual(self.stop(payload)[0].get("decision"), "block")
+        self.assertEqual(self.stop(payload)[0].get("hookSpecificOutput", {}).get("hookEventName"), "Stop")
 
     def test_malformed_present_field_never_falls_back(self):
         self.append_message("assistant", MARKER)
@@ -189,7 +196,7 @@ class StopRuntimeTests(unittest.TestCase):
         }) + "\n", encoding="utf-8")
         payload = dict(self.payload)
         payload.pop("last_assistant_message")
-        self.assertEqual(self.stop(payload)[0].get("decision"), "block")
+        self.assertEqual(self.stop(payload)[0].get("hookSpecificOutput", {}).get("hookEventName"), "Stop")
 
     def test_fallback_does_not_reuse_marker_when_last_record_is_incomplete(self):
         self.append_message("assistant", MARKER)
@@ -243,8 +250,8 @@ class StopRuntimeTests(unittest.TestCase):
         first = self.stop({**payload, "turn_id": "turn-1"})[0]
         second = self.stop({**payload, "turn_id": "turn-2"})[0]
         third = self.stop({**payload, "turn_id": "turn-3"})[0]
-        self.assertIn("1/2", first["reason"])
-        self.assertIn("2/2", second["reason"])
+        self.assertIn("1/2", first["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("2/2", second["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(third, {})
         state = self.read_state(payload)
         self.assertTrue(state["task_completed"])
@@ -254,13 +261,13 @@ class StopRuntimeTests(unittest.TestCase):
 
     def test_later_marker_cannot_extend_the_task_budget(self):
         first = {**self.payload, "last_assistant_message": "<!-- high-agency:continue max=1 -->"}
-        self.assertIn("1/1", self.stop(first)[0]["reason"])
+        self.assertIn("1/1", self.stop(first)[0]["hookSpecificOutput"]["additionalContext"])
         second = {**self.payload, "last_assistant_message": "<!-- high-agency:continue max=12 -->"}
         self.assertEqual(self.stop(second)[0], {})
 
     def test_marker_only_task_survives_later_lifecycle_hook(self):
         payload = {**self.payload, "last_assistant_message": MARKER}
-        self.assertIn("1/2", self.stop(payload)[0]["reason"])
+        self.assertIn("1/2", self.stop(payload)[0]["hookSpecificOutput"]["additionalContext"])
         before = self.read_state()
         result = subprocess.run(
             [sys.executable, str(HOOKS / "verification_state.py")],
@@ -271,18 +278,18 @@ class StopRuntimeTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.read_state()["task_id"], before["task_id"])
-        self.assertIn("2/2", self.stop(payload)[0]["reason"])
+        self.assertIn("2/2", self.stop(payload)[0]["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(self.stop(payload)[0], {})
 
     def test_huge_requested_max_is_clamped_without_integer_conversion_failure(self):
         marker = "<!-- high-agency:continue max=" + "9" * 5000 + " -->"
-        self.assertIn("1/12", self.stop({**self.payload, "last_assistant_message": marker})[0]["reason"])
+        self.assertIn("1/12", self.stop({**self.payload, "last_assistant_message": marker})[0]["hookSpecificOutput"]["additionalContext"])
 
     def test_concurrent_stops_share_one_bounded_counter(self):
         payload = {**self.payload, "last_assistant_message": "<!-- high-agency:continue max=3 -->"}
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = list(pool.map(lambda _: self.stop(payload)[0], range(8)))
-        self.assertEqual(sum(result.get("decision") == "block" for result in results), 3)
+        self.assertEqual(sum(result.get("hookSpecificOutput", {}).get("hookEventName") == "Stop" for result in results), 3)
         state = self.read_state()
         self.assertEqual(state["continuation"]["continuations"], 3)
         self.assertTrue(state["task_completed"])
@@ -292,7 +299,7 @@ class StopRuntimeTests(unittest.TestCase):
         (self.repo / "src/app.py").write_text("value = 2\n", encoding="utf-8")
         self.save_state(data)
         result = self.stop()[0]
-        self.assertIn("UNVERIFIED", result["reason"])
+        self.assertIn("UNVERIFIED", result["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(self.stop()[0], {})
         state = self.read_state()
         self.assertTrue(state["task_completed"])
@@ -309,7 +316,7 @@ class StopRuntimeTests(unittest.TestCase):
                 else:
                     data["verification_failure"] = {"reason": status}
                 self.save_state(data)
-                self.assertIn(expected, self.stop()[0]["reason"])
+                self.assertIn(expected, self.stop()[0]["hookSpecificOutput"]["additionalContext"])
                 self.assertEqual(self.stop()[0], {})
                 self.assertEqual(self.read_state()["verification_status"], status)
 
@@ -317,7 +324,7 @@ class StopRuntimeTests(unittest.TestCase):
         data = self.active_state()
         (self.repo / "src/app.py").write_text("value = 2\n", encoding="utf-8")
         self.save_state(data)
-        self.assertIn("verification guard", self.stop()[0]["reason"])
+        self.assertIn("verification guard", self.stop()[0]["hookSpecificOutput"]["additionalContext"])
         data = self.read_state()
         data["verification_guard_warned"] = False
         self.save_state(data)
@@ -328,8 +335,8 @@ class StopRuntimeTests(unittest.TestCase):
         data["verification_status"] = "failed"
         self.save_state(data)
         payload = {**self.payload, "last_assistant_message": "<!-- high-agency:continue max=1 -->"}
-        self.assertIn("failed", self.stop(payload)[0]["reason"])
-        self.assertIn("1/1", self.stop(payload)[0]["reason"])
+        self.assertIn("failed", self.stop(payload)[0]["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("1/1", self.stop(payload)[0]["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(self.stop(payload)[0], {})
         self.assertEqual(self.read_state()["continuation"]["continuations"], 1)
 
@@ -340,8 +347,8 @@ class StopRuntimeTests(unittest.TestCase):
         data["verification_snapshot"] = dict(data["baseline_snapshot"])
         self.save_state(data)
         first = self.stop()[0]
-        self.assertIn("incomplete", first["reason"])
-        self.assertIn("UNVERIFIED", first["reason"])
+        self.assertIn("incomplete", first["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("UNVERIFIED", first["hookSpecificOutput"]["additionalContext"])
         # At most one verification warning and one focused-diff warning.
         for _ in range(3):
             result = self.stop()[0]
@@ -373,7 +380,7 @@ class StopRuntimeTests(unittest.TestCase):
         data["verification_status"] = "passed"
         self.save_state(data)
         ignored.write_text("changed again\n", encoding="utf-8")
-        self.assertIn("verification guard", self.stop()[0]["reason"])
+        self.assertIn("verification guard", self.stop()[0]["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(self.read_state()["verification_status"], "unverified")
 
     def test_successful_matching_native_and_git_snapshot_allows_completion(self):
@@ -445,7 +452,7 @@ class StopRuntimeTests(unittest.TestCase):
         current = current_snapshot(data, self.repo)
         self.assertEqual(task_files(data, current, self.repo), ["src/app.py"])
         self.save_state(data)
-        self.assertIn("verification guard", self.stop()[0]["reason"])
+        self.assertIn("verification guard", self.stop()[0]["hookSpecificOutput"]["additionalContext"])
 
     def test_native_return_to_task_baseline_is_not_a_spurious_change(self):
         app = self.repo / "src/app.py"
@@ -464,7 +471,7 @@ class StopRuntimeTests(unittest.TestCase):
         data["verification_snapshot"] = current_snapshot(data, self.repo)
         data["verification_status"] = "passed"
         self.save_state(data)
-        self.assertIn("high-impact/shared path", self.stop()[0]["reason"])
+        self.assertIn("high-impact/shared path", self.stop()[0]["hookSpecificOutput"]["additionalContext"])
 
     def test_subagent_stop_cannot_complete_or_reset_parent(self):
         self.save_state(self.active_state())

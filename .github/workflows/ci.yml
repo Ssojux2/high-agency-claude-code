@@ -53,3 +53,5 @@ jobs:
         run: npm install --global @anthropic-ai/claude-code@2.1.290
       - name: Validate plugin configuration and load components without inference
         run: python scripts/validate_claude_plugin.py
+      - name: Execute real Claude hooks with a local model fixture
+        run: python scripts/validate_claude_hook_execution.py

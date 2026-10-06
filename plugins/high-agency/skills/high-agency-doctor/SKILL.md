@@ -9,7 +9,7 @@ Use this procedure for both the skill and `/high-agency:doctor`. Do not run mode
 
 ## Prerequisites and safe settings
 
-1. Run `claude --version`, `python --version`, and `git --version`. The native hook launcher requires **Python 3.10+ available as `python`** on Windows, Linux, and macOS. An activated virtual environment can supply it. Report a missing/wrong interpreter; do not install Python, add aliases, or rewrite global configuration automatically.
+1. Run `claude --version`, `python --version`, and `git --version`. Require Claude Code **2.1.163+** for Stop feedback (the tested integration baseline is 2.1.290). Clients before 2.1.139 do not support native hook `args` and can run bare Python against JSON stdin. The native hook launcher requires **Python 3.10+ available as `python`** on Windows, Linux, and macOS. An activated virtual environment can supply it. Report a missing/wrong interpreter; do not install Python, add aliases, or rewrite global configuration automatically.
 2. Inspect only these environment variables and the same keys under settings `env`:
    - `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`
    - `CLAUDE_CODE_SUBAGENT_MODEL`
@@ -21,6 +21,14 @@ Use this procedure for both the skill and `/high-agency:doctor`. Do not run mode
    - `ANTHROPIC_DEFAULT_FABLE_MODEL`
 3. Inspect only `model`, `availableModels`, `effortLevel`, and `teammateMode` in relevant user/project settings. Use JSON parsing. Do **not** print full settings or unrelated environment values.
 4. Check plugin discovery and hook errors using the installed client's supported diagnostics. A configuration file alone does not prove that hooks executed. Treat missing recorded events as **UNVERIFIED**.
+
+## Hook execution diagnostic
+
+Run `python "${CLAUDE_PLUGIN_ROOT}/scripts/diagnose_hooks.py"`. If `python` is missing or wrong, use an already installed Python 3.10+ (`python3` or `py -3`) to run the diagnostic; it still checks the configured `python` launcher and reports the mismatch. Pass `--claude` with the known native CLI path if it is not on PATH, or `--claude-version` with the version just observed from the current host.
+
+The diagnostic runs the installed hook commands with synthetic inputs and isolated temporary state. It makes no model calls and changes no project or global settings. Report launcher success separately from actual current-session hook delivery; a passing fixture does not establish the latter. Preserve failures and UNVERIFIED fields in the report.
+
+Distinguish `Stop hook blocking error` followed by High Agency continuation/verification feedback on 0.12.0 from a nonzero process exit, traceback, missing interpreter, or timeout. Release 0.12.1 uses non-error Stop feedback and fixes the whitespace-heavy Impact parsing timeout. Confirm the loaded plugin version and start a new session after updating before retrying the failing case.
 
 ## Inventory and input capabilities
 

@@ -357,9 +357,12 @@ def complete(data: dict, reason: str) -> dict:
     return {}
 
 
-def block(data: dict, reason: str) -> dict:
+def continue_turn(data: dict, reason: str) -> dict:
     data["continuing_stop"] = True
-    return {"decision": "block", "reason": reason}
+    # Claude Code 2.1.163+ continues on Stop feedback without labelling a
+    # successful advisory hook as a blocking error. Keep all task-local
+    # warning and continuation budgets in the caller.
+    return {"hookSpecificOutput": {"hookEventName": "Stop", "additionalContext": reason}}
 
 
 def warn_once(data: dict, name: str, legacy_flag: str) -> bool:
@@ -512,7 +515,7 @@ def process_stop(payload: dict) -> dict:
                 suffix = ""
                 if marker:
                     suffix = f" Preserve <!-- high-agency:continue max={bounded['limit']} --> only if useful work remains."
-                return block(
+                return continue_turn(
                     data,
                     "High Agency verification guard: " + problem
                     + " Do not claim checks passed without evidence or repeat an unavailable check indefinitely."
@@ -538,7 +541,7 @@ def process_stop(payload: dict) -> dict:
                     "Minor scope drift. Extend verification to the newly affected surface; "
                     "a full suite or extra reviewer needs an additional risk signal."
                 )
-            return block(
+            return continue_turn(
                 data,
                 "High Agency impact calibration: initial " + str(estimate.get("raw") or "")
                 + "; actual " + actual + ". " + reasons + ". " + action
@@ -551,7 +554,7 @@ def process_stop(payload: dict) -> dict:
             if reasons and warn_once(data, "diff", "diff_guard_warned"):
                 preview = ", ".join(rel(path, root) for path in diff_files[:8]) or "known touched files"
                 extra = (" git diff --check also reported: " + check) if check else ""
-                return block(
+                return continue_turn(
                     data,
                     "High Agency conditional diff review: " + "; ".join(reasons)
                     + ". Inspect the focused final diff (" + preview
@@ -580,7 +583,7 @@ def process_stop(payload: dict) -> dict:
                 "Request another pass only after meaningful progress; if useful, end with "
                 f"<!-- high-agency:continue max={limit} -->."
             )
-        return block(data, reason)
+        return continue_turn(data, reason)
 
 
 def main() -> int:

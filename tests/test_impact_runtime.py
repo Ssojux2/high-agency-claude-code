@@ -55,11 +55,11 @@ class ImpactRuntimeTests(unittest.TestCase):
             ["git", *args], cwd=self.root, text=True, capture_output=True, check=True
         )
 
-    def run_hook(self, script, **payload):
+    def run_hook(self, script, *, timeout=10, **payload):
         result = subprocess.run(
             [sys.executable, str(script)], input=json.dumps({**self.common, **payload}),
             text=True, capture_output=True, cwd=self.root, env=self.env,
-            timeout=10, check=False,
+            timeout=timeout, check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, "")
@@ -103,6 +103,30 @@ class ImpactRuntimeTests(unittest.TestCase):
         for path in ("src/auth/a.py", "src/payments/b.py"):
             (self.root / path).write_text("value = 2\n", encoding="utf-8")
 
+    def test_whitespace_heavy_transcript_keeps_real_hook_within_time_budget(self):
+        self.submit()
+        # These valid assistant records previously made the multiline Impact
+        # regex rescan whitespace from each newline, exceeding the 12s hook
+        # timeout while retaining the session lock. Use real child processes
+        # with a generous 3s ceiling so a regression cannot stall the suite.
+        for index, text in enumerate(("\n" * 100000, (" \t" * 64 + "\n") * 20000)):
+            with self.subTest(record=index):
+                self.append(text)
+                self.run_hook(
+                    VERIFY, timeout=3, hook_event_name="PreToolUse",
+                    tool_name="Bash", tool_use_id=f"whitespace-{index}",
+                    tool_input={"command": "echo inspect"},
+                )
+                self.assertIsNone(self.read_state()["impact_estimate"])
+        original = "Impact: local | files<=1 | modules<=1 | boundary=private"
+        self.append(original)
+        self.run_hook(
+            VERIFY, timeout=3, hook_event_name="PreToolUse",
+            tool_name="Bash", tool_use_id="estimate-after-whitespace",
+            tool_input={"command": "echo inspect"},
+        )
+        self.assertEqual(self.read_state()["impact_estimate"]["raw"], original)
+
     def test_major_scope_drift_blocks_once_after_real_paired_success_metadata(self):
         self.submit()
         self.append("Impact: local | files<=1 | modules<=1 | boundary=private")
@@ -111,9 +135,9 @@ class ImpactRuntimeTests(unittest.TestCase):
         self.assertEqual(self.read_state()["verification_status"], "passed")
         self.append("Done.")
         result = self.stop()
-        self.assertEqual(result.get("decision"), "block")
-        self.assertIn("impact calibration", result.get("reason", "").lower())
-        self.assertIn("major scope drift", result.get("reason", "").lower())
+        self.assertEqual(result.get("hookSpecificOutput", {}).get("hookEventName"), "Stop")
+        self.assertIn("impact calibration", result["hookSpecificOutput"]["additionalContext"].lower())
+        self.assertIn("major scope drift", result["hookSpecificOutput"]["additionalContext"].lower())
         self.assertEqual(self.stop(), {})
         self.assertTrue(self.read_state()["task_completed"])
 
@@ -127,7 +151,7 @@ class ImpactRuntimeTests(unittest.TestCase):
         self.verify()
         self.append("Impact: high | files<=99 | modules<=99 | boundary=high-impact")
         result = self.stop()
-        self.assertIn("major scope drift", result.get("reason", "").lower())
+        self.assertIn("major scope drift", result["hookSpecificOutput"]["additionalContext"].lower())
         self.assertEqual(self.read_state()["impact_estimate"]["raw"], original)
 
     def test_completed_task_allows_a_fresh_estimate_on_next_submit(self):
@@ -136,7 +160,7 @@ class ImpactRuntimeTests(unittest.TestCase):
         self.edit_both_areas()
         self.verify()
         old_id = self.read_state()["task_id"]
-        self.assertIn("major scope drift", self.stop()["reason"].lower())
+        self.assertIn("major scope drift", self.stop()["hookSpecificOutput"]["additionalContext"].lower())
         self.assertEqual(self.stop(), {})
 
         if state_store.HOST_KIND == "claude":
@@ -156,7 +180,7 @@ class ImpactRuntimeTests(unittest.TestCase):
         self.verify()
         marker = "<!-- high-agency:continue max=2 -->"
         first = self.stop(marker)
-        self.assertIn("1/2", first["reason"])
+        self.assertIn("1/2", first["hookSpecificOutput"]["additionalContext"])
         before = self.read_state()
         if state_store.HOST_KIND == "claude":
             self.common["prompt_id"] = "internal-report"
@@ -168,7 +192,7 @@ class ImpactRuntimeTests(unittest.TestCase):
         self.assertEqual(current["task_id"], before["task_id"])
         self.assertEqual(current["baseline_snapshot"], before["baseline_snapshot"])
         self.assertEqual(current["impact_estimate"], before["impact_estimate"])
-        self.assertIn("2/2", self.stop(marker)["reason"])
+        self.assertIn("2/2", self.stop(marker)["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(self.stop(marker), {})
 
 

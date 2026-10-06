@@ -2,13 +2,15 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.12.0**
+Current version: **0.12.1**
 
 ## Prerequisites
 
+**Claude Code 2.1.163+ is required for the hook output protocol.** CI uses 2.1.290 as the tested integration baseline. Native hook `args` first appeared in 2.1.139; older clients can discard the script arguments and run bare Python. Stop feedback without an error notification requires 2.1.163.
+
 **Python 3.10+ must be available as `python` on the PATH inherited by Claude Code on native Windows, Linux, and macOS.** Hooks use native `command: "python"` with an `args` array on every platform. An installation exposed only as `python3`, or a shell-only alias, does not satisfy that launcher.
 
-An activated virtual environment is acceptable if Claude Code inherits its PATH. The plugin does not install Python, create global aliases, or edit global PATH/configuration. CI runs native Windows, Linux, and macOS regression suites and real Claude Code configuration checks. These verify component loading and hook registration without model inference; authenticated task execution remains a separate acceptance check.
+An activated virtual environment is acceptable if Claude Code inherits its PATH. The plugin does not install Python, create global aliases, or edit global PATH/configuration. CI runs native Windows, Linux, and macOS regression suites, configuration checks, and real Claude hook execution against a deterministic local model fixture. The fixture verifies event delivery and bounded continuation without paid model calls; authenticated task execution remains a separate acceptance check.
 
 ## Install
 
@@ -20,6 +22,8 @@ In Claude Code:
 ```
 
 Start a new session after installation so bundled agents and hooks are loaded.
+
+**0.12.1 hook fixes:** normal Stop continuation now uses Claude's `additionalContext` feedback instead of producing a “Stop hook blocking error.” Impact parsing stays within individual lines, fixing a reproducible hook timeout on whitespace-heavy responses. `/high-agency:doctor` now includes an isolated launcher diagnostic. See [hook troubleshooting](docs/runtime-validation.md#hook-troubleshooting).
 
 > **v0.12.0 routing audit:** catalog query success, freshness, account entitlement, and native dispatch are now separate evidence checks. Read-only routing observations report only the metadata the host exposes. Validation combines regression fixtures with real Claude Code component loading and hook registration on Windows, Linux, and macOS CI. Authenticated end-to-end routing still needs user-run evaluation.
 
@@ -147,6 +151,8 @@ touched → affected → broad only on risk
 Git-baseline hooks detect native edits plus shell/generator changes, invalidate stale verification, capture the first immutable impact estimate, and compare predicted scope with the actual diff before completion.
 
 Hooks do not automatically run project tests or launch agents.
+
+Stop reminders use `hookSpecificOutput.additionalContext` to keep the turn going without labelling normal feedback as a hook error. Verification, Impact, diff-review and continuation budgets remain bounded. Actual interpreter or process failures still need diagnosis.
 
 ## Bounded autonomy
 
@@ -401,7 +407,7 @@ End-to-end success claims are intentionally not published without equal-model/eq
 
 This audit release separates catalog lookup from freshness, entitlement, and native dispatch evidence, and adds read-only routing observations. It preserves the main model, bounded role routing, and explicit supported fallbacks.
 
-Validation combines regression fixtures with real Claude Code component loading and hook registration on Windows, Linux, and macOS CI. Actual CLI end-to-end dispatch, served-model identity where exposed, forced-model behavior, and efficiency still require explicit user-run evaluation. See [routing scenarios](evals/routing-scenarios.md) and [runtime validation](docs/runtime-validation.md) for the evidence to capture; these changes do not establish token, latency, or cost savings.
+The 0.12.1 hook patch adds actual Claude event execution against a deterministic loopback model fixture to the Windows, Linux, and macOS CI checks. Account-backed dispatch, served-model identity where exposed, forced-model behavior, and efficiency still require explicit user-run evaluation. See [routing scenarios](evals/routing-scenarios.md) and [runtime validation](docs/runtime-validation.md) for the evidence to capture; these changes do not establish token, latency, or cost savings.
 
 Further runtime features, routing rules, thresholds, or orchestration complexity should not be added based on intuition alone. The next behavioral changes should be driven by real end-to-end Codex/Claude Code runs using the existing `evals/` scenarios and comparable model/budget settings, including impact-estimate calibration.
 
