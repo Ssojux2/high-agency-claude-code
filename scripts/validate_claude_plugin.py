@@ -78,6 +78,16 @@ def validate(executable: str, root: Path) -> dict:
                              ("agents", plugin / "agents")):
             if not run(name, ["plugin", "validate", str(target)]):
                 return report
+        # A Windows Git checkout can use CRLF. The host's alternate frontmatter
+        # parser exposed an unquoted colon that its LF fast path tolerated.
+        # Exercise the actual parser under both line endings on every CI OS.
+        crlf_plugin = home / "crlf-plugin"
+        shutil.copytree(plugin, crlf_plugin, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        for markdown in crlf_plugin.rglob("*.md"):
+            content = markdown.read_bytes().replace(b"\r\n", b"\n")
+            markdown.write_bytes(content.replace(b"\n", b"\r\n"))
+        if not run("crlf_manifest", ["plugin", "validate", str(crlf_plugin)]):
+            return report
         log = home / "load.log"
         if not run("load", ["--plugin-dir", str(plugin), "--init-only", "--debug-file", str(log)]):
             return report

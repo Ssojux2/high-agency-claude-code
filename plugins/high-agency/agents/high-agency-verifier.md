@@ -1,7 +1,7 @@
 ---
 name: high-agency-verifier
-description: Use for cheap deterministic verification: run targeted tests/checks, inspect exact outputs, and report evidence without editing code.
-tools: Read, Grep, Glob, Bash
+description: "Use for cheap deterministic verification: run targeted tests/checks, inspect exact outputs, and report evidence without editing code."
+tools: Read, Grep, Glob, Bash, PowerShell
 model: haiku
 effort: low
 ---

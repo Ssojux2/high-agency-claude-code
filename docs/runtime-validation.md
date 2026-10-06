@@ -38,6 +38,9 @@ The CLI checker accepts `--claude /absolute/path/to/claude` and optional
 plugin, and agent directory, then `--plugin-dir ... --init-only`. It checks the
 debug log for the expected component counts and hook loading. No user task,
 background-agent communication, or inference is implied by a successful load.
+It also validates a CRLF copy of the Markdown components so Windows Git line
+ending conversion cannot silently discard agent frontmatter. Builder and
+verifier roles allow the native PowerShell tool as well as Bash.
 
 Hook regressions use genuine subprocesses and temporary Git repositories. Some
 events are host-contract fixtures, including delayed/background results. These

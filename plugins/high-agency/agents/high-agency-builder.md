@@ -1,7 +1,7 @@
 ---
 name: high-agency-builder
 description: Use for an isolated implementation work package when delegation saves main-context cost or enables non-overlapping parallel work. Avoid overlapping writes with other agents.
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, PowerShell
 model: sonnet
 effort: medium
 ---
