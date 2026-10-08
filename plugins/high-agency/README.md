@@ -1,6 +1,8 @@
 # high-agency
 
-Version: **0.12.1**
+Version: **0.13.0**
+
+Version 0.13.0 adds explicit assumptions, proportional implementation, focused edits, and observable acceptance criteria to the coding and bounded-autonomy skills. See [coding examples and attribution](skills/high-agency-coding/references/coding-principles.md). Existing hooks, model selection, and platform launchers are unchanged.
 
 ## Prerequisites
 
@@ -16,7 +18,7 @@ Version 0.12.1 sends normal Stop continuation through `additionalContext`, avoid
 
 Lightweight Claude Code plugin containing:
 
-- `high-agency-coding`: direct autonomous coding with fresh verification.
+- `high-agency-coding`: direct autonomous coding with explicit assumptions, focused edits, and fresh verification.
 - `bounded-autonomy`: opt-in bounded continuation via the bundled Stop hook.
 - `high-agency-doctor`: read-only configuration and routing diagnostics.
 - bounded native scout, builder, verifier, planner, advisor, and deep-critic roles.

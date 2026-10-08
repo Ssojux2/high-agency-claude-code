@@ -93,17 +93,19 @@ Do not send routine planning to Opus or Fable.
 
 ### Testing
 
-- Running targeted tests and reporting exact output: verifier.
+- Checking specified acceptance conditions with targeted tests or direct inspection and reporting exact results: verifier.
 - Failure requires interpretation: main thread.
 - Complex failure after two evidence-based attempts: planner (Opus/high).
 - Persistent long-horizon or cross-system failure after that: main/scout packages the evidence, then advisor (Fable/medium) or deep-critic (Fable/xhigh), with supported effort.
 
 ### Review
 
-- Small local diff: main thread only.
+- No material review risk: no separate review stage.
 - Conditional normal review: main thread or planner when a second strong view matters.
 - Broad cross-codebase review: advisor.
 - Security/auth/schema/high-impact or subtle long-horizon failure: deep-critic on the risky surface only.
+
+When review is warranted, inspect touched changes for requirement traceability, unnecessary complexity, and unintended scope. Do not turn findings into unrelated cleanup.
 
 ## Effort policy
 
@@ -162,11 +164,11 @@ Keep orchestration shallow.
 
 Give each role the smallest self-contained packet that preserves correctness:
 
-1. **Goal** — one bounded question or deliverable.
-2. **Evidence** — exact file excerpts, symbols, errors, or observations needed for that role.
-3. **Constraints** — scope, write boundary, safety/permission limits.
-4. **Expected return** — concise findings, strategy brief, bounded patch, or verification evidence.
-5. **Stop condition** — return instead of exploring beyond the delegated surface.
+1. **Goal** — one bounded question or deliverable tied to the authorized outcome and observable acceptance conditions.
+2. **Evidence** — exact file excerpts, symbols, errors, or observations needed for that role; distinguish established facts from material assumptions or unknowns.
+3. **Constraints** — scope, write boundary, safety/permission limits; delegation does not expand these.
+4. **Expected return** — concise findings, strategy brief, bounded patch, or evidence mapped to the checked acceptance conditions with gaps stated plainly.
+5. **Stop condition** — return instead of exploring beyond the delegated surface; surface unresolved material decisions to the main thread.
 
 Especially for Fable, gather evidence first with main/Haiku and pass a compact packet rather than duplicating a large repository context.
 

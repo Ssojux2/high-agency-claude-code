@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.12.1**
+Current version: **0.13.0**
 
 ## Prerequisites
 
@@ -32,6 +32,21 @@ Start a new session after installation so bundled agents and hooks are loaded.
 `high-agency-coding` defaults to **single-agent execution with the current model**.
 
 It does not require planning documents, TDD, worktrees, subagents, full suites, or review stages for every task.
+
+## Coding principles in 0.13.0
+
+The main coding skill now applies four concrete disciplines:
+
+| Principle | Behavior |
+|---|---|
+| Think before coding | Inspect contracts, state material assumptions, and resolve consequential ambiguity; proceed on reasonable reversible defaults. |
+| Simplicity first | Build the smallest complete solution and avoid speculative features, dependencies, configuration, or abstractions. |
+| Surgical changes | Keep edits tied to the requested outcome, preserve surrounding style, and clean up only code made unused by this change. |
+| Goal-driven execution | Choose observable acceptance criteria and checks that can expose a wrong result; finish with sufficient fresh evidence. |
+
+For bugs, a regression check should distinguish the exact failure. For refactors, compare relevant behavior before and after when feasible. Trivial prose edits can use direct inspection. These are skill and role instructions; they do not add hooks, mandatory TDD, blanket approval questions, or unbounded retries. Runtime routing and the five-line preflight format are unchanged.
+
+The integration adapts the [Karpathy-inspired community guidelines](https://github.com/multica-ai/andrej-karpathy-skills/tree/2c606141936f1eeef17fa3043a72095b4765b9c2) in original wording. See [examples and pinned attribution](plugins/high-agency/skills/high-agency-coding/references/coding-principles.md) and [evaluation scenarios](evals/scenarios.md). This release does not establish comparative quality, token, or cost improvements.
 
 ## Adaptive Claude routing
 
@@ -403,9 +418,11 @@ End-to-end success claims are intentionally not published without equal-model/eq
 
 ## Development status
 
-**v0.12.0 is the current evaluation baseline.**
+**v0.12.0 remains the runtime evaluation baseline; v0.13.0 adds the requested coding-principle guidance.**
 
-This audit release separates catalog lookup from freshness, entitlement, and native dispatch evidence, and adds read-only routing observations. It preserves the main model, bounded role routing, and explicit supported fallbacks.
+The 0.13.0 update changes instructions and evaluation criteria without extending runtime heuristics or claiming a measured performance gain. Comparative model behavior still requires matched end-to-end runs.
+
+The v0.12.0 audit separates catalog lookup from freshness, entitlement, and native dispatch evidence, and adds read-only routing observations. It preserves the main model, bounded role routing, and explicit supported fallbacks.
 
 The 0.12.1 hook patch adds actual Claude event execution against a deterministic loopback model fixture to the Windows, Linux, and macOS CI checks. Account-backed dispatch, served-model identity where exposed, forced-model behavior, and efficiency still require explicit user-run evaluation. See [routing scenarios](evals/routing-scenarios.md) and [runtime validation](docs/runtime-validation.md) for the evidence to capture; these changes do not establish token, latency, or cost savings.
 

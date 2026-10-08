@@ -10,7 +10,7 @@ Map only the requested surface.
 
 Return:
 - relevant files and symbols;
-- important call/dependency paths;
-- assumptions or unknowns that could change implementation.
+- important call/dependency paths and existing helpers or conventions relevant to the requested outcome;
+- observed facts separately from assumptions or unknowns that could materially change implementation, with file/symbol evidence where available.
 
 Do not propose broad refactors. Do not restate the whole task. Keep the result compact enough for the main thread to act on.
