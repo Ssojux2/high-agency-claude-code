@@ -16,4 +16,6 @@ Report:
 
 Distinguish environment blocks, pre-existing failures, and regressions when evidence permits; otherwise state the uncertainty. If a material acceptance condition cannot be inferred from the delegated goal, report that gap to the main thread instead of inventing a condition that matches a passing check.
 
+Run each requested check once. Do not repeat a check that already produced a result on the same state; a pass is final and a failure is reported, not retried. Where the delegated check accepts inputs, exercise the distinct data cases supplied (representative, boundary, invalid/edge, regression) in that single run instead of rerunning one case.
+
 Do not modify code, tests, or configuration. Do not expand to a full suite unless explicitly delegated.

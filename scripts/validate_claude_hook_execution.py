@@ -193,6 +193,10 @@ def run_fixture(cli: Path, root: Path, base: Path, report: dict) -> None:
           "input": {"file_path": str(test_file), "content": TEST_SOURCE}}],
         [{"type": "tool_use", "id": "toolu_fixture_test", "name": shell_tool,
           "input": {"command": TEST_COMMAND, "description": "Run deterministic local fixture test"}}],
+        # An identical rerun on the unchanged snapshot must be denied by the
+        # retest policy instead of executing the passing test again.
+        [{"type": "tool_use", "id": "toolu_fixture_repeat", "name": shell_tool,
+          "input": {"command": TEST_COMMAND, "description": "Repeat the unchanged fixture test"}}],
         [{"type": "tool_use", "id": "toolu_fixture_diff", "name": shell_tool,
           "input": {"command": "git diff HEAD", "description": "Inspect complete local fixture diff"}}],
         [{"type": "text", "text": "Fixture checks completed.\n" + CONTINUE_MARKER}],
@@ -243,6 +247,14 @@ def run_fixture(cli: Path, root: Path, base: Path, report: dict) -> None:
         "exit_code": message.get("exit_code"), "outcome": message.get("outcome"),
         **({"stderr": message["stderr"][-2000:]} if message.get("stderr") else {}),
     } for message in responses]
+    repeat_results = [
+        block for request in requests for message in request.get("messages", [])
+        if isinstance(message, dict) and isinstance(message.get("content"), list)
+        for block in message["content"]
+        if isinstance(block, dict) and block.get("type") == "tool_result"
+        and block.get("tool_use_id") == "toolu_fixture_repeat"
+    ]
+    repeat_text = json.dumps(repeat_results[-1].get("content")) if repeat_results else ""
     last_content = requests[-1].get("messages", [])[-1].get("content", []) if requests else []
     stop_feedback = "\n".join(block.get("text", "") for block in last_content if isinstance(block, dict))
     states = [json.loads(path.read_text(encoding="utf-8"))
@@ -263,9 +275,13 @@ def run_fixture(cli: Path, root: Path, base: Path, report: dict) -> None:
     report["checks"] = {
         "cli_completed": process.returncode == 0 and len(results) == 1
                          and results[0].get("is_error") is False,
-        "normal_permissions_sufficed": len(results) == 1 and not results[0].get("permission_denials"),
+        # The only denial is the retest policy's deny of the unchanged repeat.
+        "normal_permissions_sufficed": len(results) == 1 and [
+            item.get("tool_use_id") for item in results[0].get("permission_denials") or []
+        ] == ["toolu_fixture_repeat"],
+        "unchanged_repeat_denied": "already passed on the current, unchanged snapshot" in repeat_text,
         "actual_hook_events_delivered": {item.get("hook_name") for item in responses} == expected_names
-                                        and len(responses) == 9,
+                                        and len(responses) == 10,
         "every_started_hook_completed": len(started) == len(responses)
                                        and {item.get("hook_id") for item in started}
                                        == {item.get("hook_id") for item in responses},
@@ -302,6 +318,8 @@ def run_fixture(cli: Path, root: Path, base: Path, report: dict) -> None:
         report["diagnostics"] = {
             "stderr": process.stderr[-3000:],
             "stop_feedback": stop_feedback[-2000:],
+            "repeat_tool_result": repeat_text[-2000:],
+            "permission_denials": results[0].get("permission_denials") if len(results) == 1 else None,
             "failed_checks": [name for name, success in report["checks"].items() if not success],
         }
         if debug_log.is_file():
