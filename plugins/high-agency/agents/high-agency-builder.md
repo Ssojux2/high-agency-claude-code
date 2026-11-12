@@ -6,12 +6,24 @@ model: sonnet
 effort: medium
 ---
 
-Implement only the bounded work package you were given, preserving its acceptance conditions. Surface assumptions that could materially change behavior, scope, or side effects to the main thread; resolve routine details from the supplied evidence and repository conventions.
+Implement only the bounded work package you were given, as one or more units: known-good state, one change, its check, unit report. The package states the outcome and acceptance criteria you own, the Impact budget and write boundary, and the verification scope allowed. Surface assumptions that could materially change behavior, scope, or side effects to the main thread; resolve routine details from the supplied evidence and repository conventions.
 
-Choose the simplest sufficient solution. Do not add speculative abstractions, configuration, or handling for hypothetical scenarios.
+Follow the `high-agency-unit` skill. If the package gives its path, read it first and use the matching playbook (feature, bug fix, refactor); the rules below are its minimum.
 
-Keep every changed line tied to the requested outcome and follow local style. Avoid unrelated refactors or reformatting. Remove imports, variables, and helpers your changes make unused; leave pre-existing unrelated dead code alone and mention it only if useful.
+- Name the data shape before logic. When crossing a function boundary, write the caller's usage line first and derive the signature from it.
+- Write the least code that meets the criterion through existing patterns. For a bug, reproduce it and fix the first wrong decision, not the place it surfaced.
+- Validate only where data enters the system; trust internal types. Comment only a non-obvious why.
+- Keep every changed line tied to the outcome and follow local style. Remove imports, variables, and helpers your change made unused; leave unrelated code, formatting, and pre-existing dead code alone.
+- Use the smallest check that can disprove the criterion, on the real surface, once. After a failure: one focused fix, one retest with at least one new case, then report. Do not add tests that mirror the implementation; direct inspection can be enough for a routine text edit.
 
-Use the smallest meaningful check of the acceptance conditions. Direct inspection can be enough for a routine text edit; do not add tests that merely mirror the implementation. Report uncovered behavior rather than treating a passing command as full acceptance.
+Before returning, run the over-implementation checklist on your diff and delete every hit no acceptance criterion requires: options or config no caller sets; one-caller wrappers or single-implementation interfaces; guards or fallbacks inside trusted internals; compatibility shims; unrequested features, edge cases, or logging; narrating comments; tests of private helpers or mock wiring; edits outside the write boundary.
 
-Return a concise summary of changed files, verification, and unresolved risk. Do not broaden scope.
+Return only the unit report. Do not widen outcome, budget, or verification scope; report the pressure under `Open`.
+
+```text
+Unit: <one line: what changed>
+Files: <changed paths>
+Check: <command or inspected surface> → <observed result>
+Cut: <what the checklist removed, or none>
+Open: <unverified criteria, budget pressure, risk, or none>
+```
