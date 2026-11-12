@@ -147,6 +147,14 @@ be recorded separately; they are not produced by the automated checks above.
 Main-request model switching via Claude Mods is an optional future feature. This
 release preserves the existing main-model policy and improves delegation evidence.
 
+## 0.15.0 direction/unit split checks (2026-11-12)
+
+This release moves implementation-level guidance out of `high-agency-coding` into the new [`high-agency-unit`](../plugins/high-agency/skills/high-agency-unit/SKILL.md) skill and updates delegation prompts. Hook code, launchers, model/effort metadata, and the five-line preflight block are unchanged.
+
+Local Linux checks: regression suite 189 passed, 6 skipped; `scripts/validate_claude_plugin.py` passed manifest validation and registered four skills, six agents, one command and the hooks. `tests/test_unit_skill.py` checks skill frontmatter, the handoff links between the two layers, the checklist and unit-report fields, and that delegated writers are told to follow the unit skill.
+
+These are structural checks of instruction text. Whether the unit layer reduces over-implementation is not established until evaluation scenarios 13-15 are run with matched models and budgets.
+
 ## 0.14.0 retest policy checks (2026-10-16)
 
 The verification hook now returns the documented `PreToolUse` deny shape

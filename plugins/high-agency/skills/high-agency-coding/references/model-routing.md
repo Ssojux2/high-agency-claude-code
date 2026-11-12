@@ -86,7 +86,7 @@ Do not send routine planning to Opus or Fable.
 ### Implementation
 
 - Small/local: main thread directly.
-- Isolated work package or parallel independent component: builder.
+- Isolated work package or parallel independent component: builder, following `high-agency-unit` and returning its unit report.
 - Avoid two writing agents in overlapping files.
 - Keep integration and final acceptance in the main thread.
 - Do not use Fable for routine implementation boilerplate. Use it to guide or unblock the hard part, then return execution to main/Sonnet.
@@ -167,7 +167,7 @@ Give each role the smallest self-contained packet that preserves correctness:
 1. **Goal** — one bounded question or deliverable tied to the authorized outcome and observable acceptance conditions.
 2. **Evidence** — exact file excerpts, symbols, errors, or observations needed for that role; distinguish established facts from material assumptions or unknowns.
 3. **Constraints** — scope, write boundary, safety/permission limits; delegation does not expand these.
-4. **Expected return** — concise findings, strategy brief, bounded patch, or evidence mapped to the checked acceptance conditions with gaps stated plainly.
+4. **Expected return** — concise findings, strategy brief, bounded patch, or evidence mapped to the checked acceptance conditions with gaps stated plainly. For the builder: the `high-agency-unit` unit report, with the Impact budget and the installed path of `high-agency-unit/SKILL.md` supplied under Constraints.
 5. **Stop condition** — return instead of exploring beyond the delegated surface; surface unresolved material decisions to the main thread.
 
 Especially for Fable, gather evidence first with main/Haiku and pass a compact packet rather than duplicating a large repository context.

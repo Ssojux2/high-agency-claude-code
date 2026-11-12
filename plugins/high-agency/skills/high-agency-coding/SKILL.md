@@ -7,6 +7,8 @@ description: Use when implementing, debugging, refactoring, reviewing, or planni
 
 Use the model's own judgment aggressively. Add process only when it changes the probability of a correct result.
 
+This skill is the **direction layer**: outcome, scope, route, verification budget, finish. Writing the code is the **unit layer**: [`high-agency-unit`](../high-agency-unit/SKILL.md).
+
 ## Invariants
 
 Keep only these invariants:
@@ -17,54 +19,37 @@ Keep only these invariants:
 - **Scope** — avoid unrelated changes.
 - **Escalation** — spend stronger models, deeper effort, broader tests, and review only where they have leverage.
 
-The coding discipline below applies these invariants; additional process is optional.
-
 ## Default execution
 
 Start single-agent with the current model.
 
 Do not create a plan document, subagent, worktree, TDD cycle, broad test run, or review stage by default.
 
-For a local reversible change:
-
-1. inspect enough context to act;
-2. make the smallest coherent change that can prove the requirement;
-3. run the narrowest relevant verification;
-4. finish when evidence is sufficient.
+A local reversible change is one unit: inspect enough context to act, run it through `high-agency-unit`, and finish when its evidence is sufficient.
 
 For uncertain or multi-step work, keep a short working plan in context. Ask the user only when materially different interpretations affect outcomes, side effects, or irreversible choices.
 
-## Coding discipline
+## Direction and unit handoff
 
-Apply these four principles within the task's risk and verification budget. They do not add a mandatory planning, approval, testing, or review stage.
+Set direction here; do not design the implementation here.
 
-### Think before coding
+- **Acceptance criteria** — before editing, translate the request into observable criteria and, for each, the smallest check that could disprove it. Keep them in task context, not in extra preflight fields; the five-line preflight below stays unchanged.
+- **Assumptions** — inspect relevant code, callers, and contracts first. For a reversible, low-risk choice, state the assumption and proceed. If unresolved interpretations would materially change the outcome, side effects, or authorization, ask one focused question and continue independent work. Do not silently choose a consequential interpretation or re-ask for authority already granted.
+- **Units** — split the work into the fewest units that each end in a check. Most tasks are one unit. Pair each unit with its criterion; keep the list in context, not in a document.
 
-Inspect relevant code, callers, and existing contracts before choosing an implementation. State assumptions that affect observable behavior and explain material tradeoffs, including a simpler option when appropriate. Use local evidence to resolve uncertainty first.
+Every unit of code work follows `high-agency-unit`, whether the main thread or a delegate writes it. Handoff contract:
 
-For a reversible, low-risk choice, state the reasonable assumption and proceed. If unresolved interpretations would materially change the outcome, side effects, or authorization, ask one focused question and continue independent work. Do not silently choose a consequential interpretation or re-ask for authority already granted.
+| Direction passes down | Unit returns |
+|---|---|
+| Outcome: the acceptance criteria this unit owns and their checks | `Unit` / `Files`: what changed and where |
+| Budget: the preflight `Impact:` line and the write boundary | `Check`: the command or surface exercised and the observed result |
+| Scope of proof: the route and the verification scope allowed | `Cut` / `Open`: what the over-implementation checklist removed; unverified criteria, budget pressure, risk |
 
-### Simplicity first
-
-Build the smallest complete solution for the requested outcome. Reuse existing patterns; introduce dependencies, configuration, abstractions, or extension points only when current requirements justify them. Do not add speculative features or optimize hypothetical future use.
-
-Preserve required validation, security, compatibility, and documented edge cases. Simplicity is not a line-count target or permission to weaken a contract.
-
-### Surgical changes
-
-Keep each changed hunk traceable to the requested outcome or its necessary implementation and verification. Match surrounding style; preserve unrelated formatting, comments, and working code. Remove imports, variables, and helpers made unused by this change, but leave pre-existing unrelated dead code alone unless its removal is requested or necessary. Mention unrelated findings only when useful.
-
-Necessary caller, schema, documentation, or test updates are part of a coherent change. Do not force a one-file patch or overwrite other work to make the diff smaller; use the existing scope-drift policy when impact grows.
-
-### Goal-driven execution
-
-Before editing, translate the request into observable acceptance criteria and choose the smallest check that could disprove success. When a working plan is useful, pair each step with its verification; keep it in context rather than creating a document by default.
-
-For a bug, reproduce the specific failure when feasible and use a focused regression check that distinguishes wrong from correct behavior. For a refactor, compare relevant behavior before and after when feasible. Inspect actual assertions and results: a passing command alone does not show the requirement was met. For a trivial prose edit or obvious reversible one-liner, direct inspection may be sufficient; a new test or TDD cycle is not mandatory.
+For a **BUILDER** route, put these three inputs and the installed path of `high-agency-unit/SKILL.md` in the handoff packet; the builder returns the unit report. A unit never widens outcome, budget, or verification scope on its own; it reports the pressure and direction applies the drift policy below. Reuse a unit's reported evidence while it is valid after the last relevant edit; do not rerun its check to confirm.
 
 Stop once the acceptance criteria have sufficient fresh evidence. If blocked or unable to verify, report the gap rather than expanding scope, weakening checks, or looping indefinitely.
 
-Read [coding-principles examples](references/coding-principles.md) when ambiguity, scope, or the choice of a meaningful check needs a concrete example. Keep the five-line preflight below unchanged; express acceptance criteria in normal task context, not extra preflight fields.
+Read [direction examples](references/coding-principles.md) when ambiguity or the choice of a meaningful check needs a concrete case.
 
 ## Activate verification
 
@@ -92,7 +77,7 @@ Use this mapping:
 
 - **DIRECT** — local, obvious, bounded work. `Model: current main model`.
 - **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting. Use `high-agency-scout` or `high-agency-verifier` with the latest available Haiku and supported low effort.
-- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder` with the latest available Sonnet and supported medium effort.
+- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder` with the latest available Sonnet and supported medium effort. The builder writes its package as `high-agency-unit` units.
 - **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation. Use `high-agency-planner` with the latest available Opus and supported high effort before implementation.
 - **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that warrants frontier reasoning. Use `high-agency-advisor` with the latest available Fable and supported medium effort; reserve `high-agency-deep-critic` with supported xhigh effort for rare capability-critical cases.
 
@@ -189,6 +174,7 @@ Before claiming completion, confirm:
 
 - the actual requested behavior is supported by fresh evidence;
 - any evidence used is valid after the last relevant edit;
+- every unit report's `Open:` item is resolved or stated;
 - conditional diff review, if triggered, found no scope drift;
 - unresolved risk is stated plainly.
 
