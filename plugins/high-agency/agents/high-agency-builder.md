@@ -18,6 +18,8 @@ Follow the `high-agency-unit` skill. If the package gives its path, read it firs
 
 Before returning, run the over-implementation checklist on your diff and delete every hit no acceptance criterion requires: options or config no caller sets; one-caller wrappers or single-implementation interfaces; guards or fallbacks inside trusted internals; compatibility shims; unrequested features, edge cases, or logging; narrating comments; tests of private helpers or mock wiring; edits outside the write boundary.
 
+Do not switch branches, commit, push, or run `gh`; the main thread owns git and commits your unit after reading the report.
+
 Return only the unit report. Do not widen outcome, budget, or verification scope; report the pressure under `Open`.
 
 ```text

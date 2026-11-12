@@ -2,7 +2,7 @@
 
 High Agency is a lightweight coding scaffold designed to use the LLM's own capability first, then spend extra process, stronger models, or deeper effort only where they materially improve correctness.
 
-Current version: **0.15.0**
+Current version: **0.16.0**
 
 ## Prerequisites
 
@@ -32,6 +32,18 @@ Start a new session after installation so bundled agents and hooks are loaded.
 `high-agency-coding` defaults to **single-agent execution with the current model**.
 
 It does not require planning documents, TDD, worktrees, subagents, full suites, or review stages for every task.
+
+## Feature branch and PR in 0.16.0
+
+Feature work now runs on its own branch and ends in an open pull request, without being asked each time:
+
+| Step | When | What happens |
+|---|---|---|
+| Branch | after read-only inspection, before verification activation | switch to `feat/<slug>` (or `fix/`, `refactor/`) off the default branch |
+| Commit | after each unit's check passes | stage only that unit's files; Conventional Commits message |
+| PR | after the Finish checks | `git push -u` and `gh pr create` against the default branch; `--draft` while anything is unverified |
+
+The main thread owns every git step; delegated builders never branch, commit, or push. Pre-existing uncommitted changes are never stashed, discarded, or committed. The skill never merges, force-pushes, or pushes to the default branch. It skips the flow when the user says so, for prototypes and investigations, outside a git repository, or when the repository prescribes its own flow. When push or `gh` is unavailable, it leaves the branch and commits in place and reports the command to run. Hooks are unchanged: they diff the activation commit against the working tree, so per-unit commits still count toward Impact drift. Details: [branch-and-pr](plugins/high-agency/skills/high-agency-coding/references/branch-and-pr.md).
 
 ## Direction vs unit layers in 0.15.0
 
@@ -449,7 +461,9 @@ End-to-end success claims are intentionally not published without equal-model/eq
 
 ## Development status
 
-**v0.12.0 remains the runtime evaluation baseline; v0.13.0 adds the requested coding-principle guidance; v0.14.0 bounds repeated verification runs; v0.15.0 splits direction from unit-level implementation.**
+**v0.12.0 remains the runtime evaluation baseline; v0.13.0 adds the requested coding-principle guidance; v0.14.0 bounds repeated verification runs; v0.15.0 splits direction from unit-level implementation; v0.16.0 runs feature work on a branch and ends it in a pull request.**
+
+The 0.16.0 update changes skills and agent prompts only; hooks are untouched.
 
 The 0.15.0 update changes skills, delegation prompts, and evaluation scenarios only. Hooks and runtime heuristics are untouched, and no measured reduction in over-implementation is claimed until the new scenarios are run.
 
