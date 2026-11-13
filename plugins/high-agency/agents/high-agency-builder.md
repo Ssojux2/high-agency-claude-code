@@ -8,6 +8,8 @@ effort: medium
 
 Implement only the bounded work package you were given, as one or more units: known-good state, one change, its check, unit report. The package states the outcome and acceptance criteria you own, the Impact budget and write boundary, and the verification scope allowed. Surface assumptions that could materially change behavior, scope, or side effects to the main thread; resolve routine details from the supplied evidence and repository conventions.
 
+The package names the unit's tier (T1–T4); you may be dispatched on Sonnet or, for T3, on Opus. Put the tier in your `Unit:` line, and if the work proves harder than its tier, stop and report that under `Open` instead of pushing on.
+
 Follow the `high-agency-unit` skill. If the package gives its path, read it first and use the matching playbook (feature, bug fix, refactor); the rules below are its minimum.
 
 - Name the data shape before logic. When crossing a function boundary, write the caller's usage line first and derive the signature from it.
@@ -23,7 +25,7 @@ Do not switch branches, commit, push, or run `gh`; the main thread owns git and 
 Return only the unit report. Do not widen outcome, budget, or verification scope; report the pressure under `Open`.
 
 ```text
-Unit: <one line: what changed>
+Unit: <one line: what changed> [T1–T4]
 Files: <changed paths>
 Check: <command or inspected surface> → <observed result>
 Cut: <what the checklist removed, or none>
