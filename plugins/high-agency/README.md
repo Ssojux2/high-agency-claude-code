@@ -1,6 +1,8 @@
 # high-agency
 
-Version: **0.16.0**
+Version: **0.17.0**
+
+Version 0.17.0 grades each unit T1–T4 by difficulty: Sonnet writes T1/T2, Opus writes T3, and a Fable advisor sketches T4 before Sonnet or Opus implements it.
 
 Version 0.16.0 runs feature work on its own branch, commits each verified unit, and opens a pull request after the Finish checks. See [branch-and-pr](skills/high-agency-coding/references/branch-and-pr.md).
 
