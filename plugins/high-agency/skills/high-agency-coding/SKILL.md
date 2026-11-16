@@ -87,7 +87,7 @@ Use this mapping:
 
 - **DIRECT** — local, obvious, bounded work. `Model: current main model`.
 - **CHEAP DELEGATE** — broad read-only mapping, deterministic search, or targeted command/test reporting. Use `high-agency-scout` or `high-agency-verifier` with the latest available Haiku and supported low effort.
-- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder` with the latest available Sonnet and supported medium effort. The builder writes its package as `high-agency-unit` units.
+- **BUILDER** — an isolated implementation package where delegation saves main-context cost or enables genuinely independent work. Use `high-agency-builder` with the latest available Sonnet and supported medium effort. The builder writes its package as `high-agency-unit` units, and each unit's difficulty tier picks its model: Sonnet for T1/T2, Opus for T3, a Fable advisor sketch first for T4 (see `references/model-routing.md` → "Unit tiers").
 - **STRONG REASONING** — ambiguous architecture, security/high-impact boundaries, difficult cross-system reasoning, or a root cause whose answer materially changes implementation. Use `high-agency-planner` with the latest available Opus and supported high effort before implementation.
 - **FRONTIER ESCALATION** — long-horizon/codebase-wide strategy or a hard reasoning bottleneck that warrants frontier reasoning. Use `high-agency-advisor` with the latest available Fable and supported medium effort; reserve `high-agency-deep-critic` with supported xhigh effort for rare capability-critical cases.
 

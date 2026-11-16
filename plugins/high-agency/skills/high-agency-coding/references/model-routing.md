@@ -91,6 +91,22 @@ Do not send routine planning to Opus or Fable.
 - Keep integration and final acceptance in the main thread.
 - Do not use Fable for routine implementation boilerplate. Use it to guide or unblock the hard part, then return execution to main/Sonnet.
 
+### Unit tiers
+
+`high-agency-unit` grades each unit T1–T4 by its hardest fact. When a unit is delegated or escalated, the tier sets the model. Use the `Agent` tool's per-invocation `model` override when the live schema offers it; otherwise keep the role's frontmatter model and report the tier as unrouted.
+
+| Tier | Writer | Model / effort | Independent check |
+|---|---|---|---|
+| T1 mechanical | main thread; bulk → `high-agency-builder` | Sonnet / low | `high-agency-verifier` (Haiku) when a command proves it |
+| T2 standard | main thread or `high-agency-builder` | Sonnet / medium (frontmatter default) | main thread or verifier |
+| T3 hard | `high-agency-builder` with `model: "opus"` | Opus / high | verifier runs the unit's check; the main thread reviews the diff against the checklist |
+| T4 frontier | `high-agency-advisor` sketches; units then run as T2/T3 | Fable / medium; `high-agency-deep-critic` (Fable / xhigh) only for capability-critical final review | per the units' own tiers |
+
+- The hardest fact decides: one T3 fact makes the whole unit T3. If a unit mixes a T3 core with T1 bulk, split it.
+- Escalate one tier after one fix and one retest fail; a second failure sharing a premise at T3 goes to the T4 advisor with a compact packet (reproduction, failed hypotheses, the shared belief). Never run two tiers on the same question.
+- Fable never writes code here: it returns the sketch (types, signatures, invariants, unit order), and Sonnet or Opus implements against it.
+- Fallbacks: Opus → current main model; Fable → Opus high → current main model. Report an unavailable tier instead of claiming it ran.
+
 ### Testing
 
 - Checking specified acceptance conditions with targeted tests or direct inspection and reporting exact results: verifier.
